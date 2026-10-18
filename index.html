@@ -1,0 +1,1330 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Proje 1815 Kâğıt Döngü</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: a dark ink-and-brass desk (the game's UI direction); decisions on panels, the Divan's letters on paper. One deliberate dark look. */
+:root {
+  color-scheme: dark;
+  --desk: #15120e; --panel: #1e1a14; --panel2: #29231a; --line: #3b3226;
+  --brass: #c09a5b; --brass-dim: #8a7148; --text: #eadfc6; --muted: #ab9b7c;
+  --paper: #efe5cc; --paper2: #e6d8b6; --ink: #2b2219; --ink-muted: #6b5a43;
+  --good: #8fb276; --bad: #d2705c; --warn: #d9ab52;
+  --us: #c25446; --ru: #8ea4bd; --eg: #cfa44a;
+  --f-display: "Cormorant SC", "Cormorant Garamond", Georgia, serif;
+  --f-text: "EB Garamond", Georgia, "Times New Roman", serif;
+  --f-ui: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+}
+html, body { background: var(--desk); color: var(--text); }
+body { font: 16px/1.5 var(--f-ui); -webkit-font-smoothing: antialiased; }
+#app { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 96px; max-width: 1280px; margin: 0 auto; }
+h1, h2, h3, h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .02em; text-wrap: balance; margin: 0; }
+h2 { font-size: 1.55rem; color: var(--brass); }
+h3 { font-size: 1.12rem; color: var(--brass); margin-top: 1.2rem; margin-bottom: .45rem; letter-spacing: .05em; }
+h3 small { font-family: var(--f-ui); color: var(--muted); letter-spacing: 0; font-size: .8rem; }
+h4 { font-size: 1.08rem; color: var(--text); display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+p { margin: .4rem 0; }
+.lead { color: var(--text); max-width: 68ch; }
+.note { color: var(--muted); font-size: .92rem; max-width: 70ch; }
+.why { display: block; color: var(--muted); font-size: .82rem; line-height: 1.35; }
+b { font-weight: 700; }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* header */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--desk); display: grid; grid-template-columns: auto auto 1fr; gap: 12px 20px; align-items: center; padding: 12px 0 10px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; flex-direction: column; line-height: 1.1; }
+.mark { font-family: var(--f-display); font-size: 1.45rem; color: var(--brass); letter-spacing: .06em; }
+.sub { color: var(--muted); font-size: .8rem; }
+.year { display: flex; flex-direction: column; align-items: center; line-height: 1; padding: 0 14px; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+.year .y { font-family: var(--f-display); font-size: 2.3rem; color: var(--text); font-variant-numeric: tabular-nums; }
+.year .ys { color: var(--muted); font-size: .75rem; margin-top: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.chip { display: grid; grid-template-rows: auto auto auto; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 5px 10px; color: var(--text); font: inherit; cursor: pointer; min-width: 92px; }
+.chip:hover { border-color: var(--brass-dim); }
+.chip-l { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.chip-v { font-family: var(--f-display); font-size: 1.35rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.chip-s { font-size: .74rem; color: var(--muted); }
+.chip.bad { border-color: var(--bad); } .chip.bad .chip-v { color: var(--bad); }
+.chip.warn { border-color: var(--warn); } .chip.warn .chip-v { color: var(--warn); }
+
+/* layout */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 22px; margin-top: 14px; }
+.main { min-width: 0; }
+.tabs { display: flex; gap: 2px; overflow-x: auto; border-bottom: 1px solid var(--line); scrollbar-width: thin; }
+.tab { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted); font: 500 .98rem var(--f-ui); padding: 9px 14px; cursor: pointer; white-space: nowrap; }
+.tab:hover { color: var(--text); }
+.tab.on { color: var(--brass); border-bottom-color: var(--brass); }
+.pane { padding: 16px 0 8px; }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.row2 > * { min-width: 0; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 12px 13px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.card p { font-size: .92rem; margin: 2px 0; }
+.card .who, .card .subt { color: var(--muted); font-size: .85rem; }
+.card .subt { font-style: italic; font-family: var(--f-text); }
+.card.done { border-color: var(--brass-dim); background: var(--panel2); }
+.meta { color: var(--muted); font-size: .82rem; margin-top: auto; padding-top: 6px; }
+.pill { display: inline-block; font: 500 .74rem var(--f-ui); padding: 1px 8px; border-radius: 999px; background: var(--panel2); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+.pill.good { color: var(--good); border-color: color-mix(in srgb, var(--good) 50%, transparent); }
+.pill.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 50%, transparent); }
+.pill.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 50%, transparent); }
+
+/* controls */
+.btn { background: var(--panel2); color: var(--text); border: 1px solid var(--brass-dim); border-radius: 4px; padding: 8px 13px; font: 500 .95rem var(--f-ui); cursor: pointer; text-align: left; }
+.btn small { display: block; color: var(--muted); font-weight: 400; font-size: .8rem; margin-top: 1px; }
+.btn:hover:not(:disabled) { border-color: var(--brass); background: #322a1f; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.primary { background: var(--brass); color: #1b150e; border-color: var(--brass); font-weight: 700; text-align: center; }
+.btn.primary:hover:not(:disabled) { background: #d2ad6c; }
+.btn.ghost { background: transparent; border-color: var(--line); }
+.btn.sq { width: 44px; height: 44px; text-align: center; font-size: 1.1rem; padding: 0; }
+.btn.big { padding: 11px 26px; font-size: 1.05rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+.actions.tight { margin-top: 8px; }
+.actions .btn { flex: 1 1 240px; }
+.actions.tight .btn { flex: 0 0 auto; }
+:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.seg { display: inline-flex; border: 1px solid var(--brass-dim); border-radius: 4px; overflow: hidden; flex-wrap: wrap; }
+.seg button { background: transparent; color: var(--text); border: 0; border-right: 1px solid var(--line); padding: 7px 14px; font: 500 .92rem var(--f-ui); cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button.on { background: var(--brass); color: #1b150e; }
+.seg button:disabled { opacity: .45; cursor: not-allowed; }
+.seg.wide { display: flex; } .seg.wide button { flex: 1; }
+.stepper { display: flex; align-items: center; gap: 14px; }
+.stepper span { text-align: center; line-height: 1.3; }
+.stepper b { font-family: var(--f-display); font-size: 1.8rem; }
+.stepper small { color: var(--muted); }
+
+/* tables */
+.t { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.t td, .t th { padding: 5px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.t th { color: var(--muted); font-weight: 500; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; text-align: left; }
+.t tr.grp td { color: var(--text); font-weight: 500; }
+.t tr.sub td { color: var(--muted); font-size: .84rem; padding-left: 14px; border-bottom-style: dotted; }
+.t tr.sum td { font-weight: 700; border-bottom: 0; }
+.t tr.lag td:nth-child(2) { color: var(--bad); }
+.t tr.lead td:nth-child(2) { color: var(--good); }
+.fcbox { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; min-width: 0; overflow-x: auto; }
+.fcbox h4 { margin-bottom: 6px; }
+
+/* technology */
+.techs { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-top: 10px; }
+.tcol { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.tcol h3 { margin: 0 0 2px; }
+.tech { display: flex; flex-direction: column; gap: 2px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; color: var(--text); font: inherit; cursor: pointer; }
+.tech:hover:not(:disabled) { border-color: var(--brass-dim); }
+.tech.on { border-color: var(--brass); box-shadow: inset 3px 0 0 var(--brass); }
+.tech.known { background: var(--panel2); border-color: var(--brass-dim); }
+.tech:disabled:not(.known) { opacity: .5; cursor: not-allowed; }
+.tech.known:disabled { cursor: default; }
+.tn { font-weight: 700; font-size: .95rem; }
+.te { font-size: .8rem; color: var(--muted); }
+.tm { font-size: .78rem; color: var(--brass); }
+.bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 3px; }
+.bar i { display: block; height: 100%; background: var(--brass); }
+
+/* institutions */
+.pips { display: inline-flex; gap: 3px; }
+.pips i { width: 11px; height: 11px; border: 1px solid var(--brass-dim); transform: rotate(45deg); }
+.pips i.on { background: var(--brass); border-color: var(--brass); }
+.pips i.pend { background: repeating-linear-gradient(45deg, var(--brass-dim) 0 2px, transparent 2px 4px); }
+.odds { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: .8rem; color: var(--muted); background: var(--panel2); padding: 6px 8px; border-radius: 3px; margin-top: 4px; }
+.odds b { width: 100%; color: var(--warn); font-size: .9rem; }
+
+/* diplomacy */
+.rel { display: grid; gap: 8px; max-width: 520px; margin: 8px 0; }
+.rel > div { display: grid; grid-template-columns: 120px 1fr 64px; gap: 10px; align-items: center; font-size: .92rem; }
+.rel b { text-align: right; font-variant-numeric: tabular-nums; }
+.hbar { position: relative; height: 8px; background: var(--line); border-radius: 4px; overflow: visible; display: block; }
+.hbar i { display: block; height: 100%; background: var(--brass); border-radius: 4px; }
+.hbar.ru i { background: var(--ru); } .hbar.eg i { background: var(--eg); }
+.hbar b { position: absolute; top: -4px; width: 2px; height: 16px; background: var(--bad); }
+
+/* side */
+.side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.fark, .kronik { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; }
+.fark h2, .kronik h2 { font-size: 1.25rem; margin-bottom: 8px; }
+.vs { margin-bottom: 12px; }
+.vs-h { display: flex; justify-content: space-between; gap: 6px; align-items: center; font-size: .9rem; margin-bottom: 4px; }
+.vs-bar { height: 10px; border-radius: 5px; overflow: hidden; background: var(--ru); }
+.vs-bar.eg { background: var(--eg); }
+.vs-bar i { display: block; height: 100%; background: var(--us); }
+.vs-n { display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.gap { font-size: .86rem; color: var(--muted); margin: 6px 0 0; }
+.kronik ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-family: var(--f-text); font-size: .98rem; }
+.kronik li b { color: var(--brass); font-family: var(--f-ui); font-size: .8rem; margin-right: 4px; }
+
+/* bottom bar */
+.endbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: flex; gap: 12px; align-items: center; justify-content: flex-end; background: color-mix(in srgb, var(--desk) 92%, transparent); border-top: 1px solid var(--line); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); backdrop-filter: blur(4px); }
+.endbar .hint { color: var(--muted); font-size: .85rem; margin-right: auto; }
+.endbar .hint b { color: var(--warn); }
+.endbar .btn { padding: 10px 22px; }
+
+/* modals and paper */
+.scrim { position: fixed; inset: 0; z-index: 20; background: rgba(8, 6, 4, .72); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: max(16px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 24px max(12px, env(safe-area-inset-left, 0px)); }
+.modal { width: min(760px, 100%); background: var(--panel); border: 1px solid var(--brass-dim); border-radius: 4px; padding: 20px 22px; margin-top: 4vh; box-shadow: 0 18px 60px rgba(0, 0, 0, .55); }
+.modal > h2 { margin-bottom: 8px; }
+.mfoot { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 16px; }
+.modal.paper, .paper-sheet { background: var(--paper); color: var(--ink); border-color: #b9a47a; }
+.modal.paper h2, .paper-sheet h1, .paper-sheet h2 { color: #5a2c1e; }
+.modal.paper .note, .paper-sheet .note, .modal.paper .why, .paper-sheet .why { color: var(--ink-muted); }
+.modal.paper .t td, .paper-sheet .t td, .modal.paper .t th { border-bottom-color: #cdbb94; }
+.modal.paper .t tr.lag td:nth-child(2) { color: #a03a26; } .modal.paper .t tr.lead td:nth-child(2) { color: #3f6b2a; }
+.modal.paper .fcbox { background: var(--paper2); border-color: #cdbb94; }
+.modal.paper .pill { background: #f6eedb; border-color: #cdbb94; color: var(--ink-muted); }
+.modal.paper .pill.good { color: #3f6b2a; } .modal.paper .pill.warn { color: #8a5d12; } .modal.paper .pill.bad { color: #a03a26; }
+.modal.paper.good { box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 60%, transparent), 0 18px 60px rgba(0,0,0,.55); }
+.modal.paper.bad { box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 60%, transparent), 0 18px 60px rgba(0,0,0,.55); }
+.place { font-family: var(--f-text); font-style: italic; color: var(--ink-muted); margin: 0 0 4px; }
+.etext { font-family: var(--f-text); font-size: 1.15rem; line-height: 1.5; }
+.opts { display: grid; gap: 8px; margin-top: 14px; }
+.opt { text-align: left; background: #f8f1df; border: 1px solid #bfa979; border-radius: 4px; padding: 10px 12px; cursor: pointer; color: var(--ink); font: inherit; display: flex; flex-direction: column; gap: 2px; }
+.opt b { font-family: var(--f-display); font-size: 1.12rem; color: #5a2c1e; }
+.opt span { font-size: .9rem; color: var(--ink-muted); }
+.opt:hover:not(:disabled) { border-color: #5a2c1e; background: #fff8e8; }
+.opt:disabled { opacity: .5; cursor: not-allowed; }
+.modal.paper .btn.primary { background: #5a2c1e; border-color: #5a2c1e; color: var(--paper); }
+.outcome { font-family: var(--f-text); font-size: 1.15rem; }
+.outcome.good { color: #3f6b2a; } .outcome.bad { color: #a03a26; }
+.rep { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.rep li { padding-left: 14px; position: relative; font-size: .96rem; }
+.rep li::before { content: ""; position: absolute; left: 0; top: .55em; width: 6px; height: 6px; background: var(--brass-dim); transform: rotate(45deg); }
+.rep li.good::before { background: var(--good); } .rep li.bad::before { background: var(--bad); } .rep li.rival::before { background: var(--eg); }
+.rep li.bad { color: #f0b7a8; } .rep li.rival { color: var(--muted); font-style: italic; }
+.toast { position: fixed; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--paper); color: var(--ink); padding: 8px 16px; border-radius: 4px; z-index: 40; box-shadow: 0 6px 24px rgba(0,0,0,.5); font-size: .92rem; max-width: calc(100% - 32px); }
+
+/* intro and end */
+.intro, .end { display: grid; gap: 18px; padding-top: 4vh; max-width: 820px; margin: 0 auto; }
+.paper-sheet { border: 1px solid #b9a47a; border-radius: 4px; padding: 26px 28px; font-family: var(--f-text); font-size: 1.12rem; line-height: 1.55; box-shadow: 0 18px 60px rgba(0,0,0,.5); }
+.paper-sheet h1 { font-size: clamp(2rem, 6vw, 2.8rem); margin-bottom: 8px; }
+.paper-sheet h2 { font-size: 1.5rem; margin-top: 14px; }
+.paper-sheet .note { font-family: var(--f-ui); font-size: .92rem; }
+.brief { padding-left: 1.1em; } .brief li { margin: 6px 0; }
+.field { display: grid; gap: 4px; font-family: var(--f-ui); font-size: .9rem; color: var(--ink-muted); margin: 14px 0 6px; max-width: 320px; }
+.field input, textarea { font: 1rem var(--f-ui); padding: 8px 10px; border: 1px solid #b9a47a; border-radius: 4px; background: #fbf6ea; color: var(--ink); width: 100%; box-sizing: border-box; }
+textarea { min-height: 64px; margin-top: 8px; resize: vertical; }
+.paper-sheet .btn.primary { background: #5a2c1e; border-color: #5a2c1e; color: var(--paper); }
+.paper-sheet .btn { background: #f6eedb; color: var(--ink); border-color: #b9a47a; }
+.paper-sheet .btn.primary { background: #5a2c1e; color: var(--paper); }
+.paper-sheet .seg { border-color: #b9a47a; } .paper-sheet .seg button { color: var(--ink); border-right-color: #cdbb94; } .paper-sheet .seg button.on { background: #5a2c1e; color: var(--paper); }
+.areas { display: grid; gap: 8px; margin: 12px 0; font-family: var(--f-ui); }
+.area { display: grid; grid-template-columns: 140px 1fr 36px; gap: 10px; align-items: center; font-size: .95rem; }
+.area .why { grid-column: 1 / -1; margin-top: -4px; }
+.area b { text-align: right; font-variant-numeric: tabular-nums; }
+.paper-sheet .hbar { background: #d6c59c; } .paper-sheet .hbar i { background: #5a2c1e; }
+.decs { display: grid; gap: 6px; margin-top: 8px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
+.dec { display: flex; gap: 10px; align-items: flex-start; font-family: var(--f-ui); font-size: .95rem; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
+.dec:hover { background: #f6eedb; } .dec.on { background: #f6eedb; outline: 1px solid #b9a47a; }
+.dec b { color: #5a2c1e; margin-right: 4px; }
+.dec input { margin-top: 4px; accent-color: #5a2c1e; }
+.reason { margin: -2px 0 8px 30px; width: calc(100% - 30px); }
+.count { font-family: var(--f-ui); font-size: .9rem; color: var(--ink-muted); }
+.sent { margin-top: 14px; padding: 12px; background: var(--paper2); border-radius: 4px; font-family: var(--f-ui); font-size: .95rem; }
+.sent textarea { min-height: 160px; font-size: .85rem; }
+.spark { margin: 12px 0 4px; }
+.spark svg { width: 100%; height: auto; display: block; }
+.spark .gl { stroke: currentColor; opacity: .18; stroke-width: 1; }
+.spark .gt { fill: currentColor; opacity: .65; font: 11px var(--f-ui); }
+.spark .ln { fill: none; stroke-width: 2.2; }
+.spark .ln.us { stroke: var(--us); } .spark .ln.us2 { stroke: var(--us); stroke-dasharray: 5 4; } .spark .ln.ru { stroke: var(--ru); } .spark .ln.eg { stroke: var(--eg); }
+.paper-sheet .spark .ln.ru { stroke: #4f6684; } .paper-sheet .spark .ln.eg { stroke: #a37716; }
+.spark figcaption { font-size: .8rem; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; font-family: var(--f-ui); opacity: .85; }
+.k { display: inline-block; width: 16px; height: 3px; vertical-align: middle; margin-right: 4px; }
+.k.us { background: var(--us); } .k.us2 { background: repeating-linear-gradient(90deg, var(--us) 0 5px, transparent 5px 8px); } .k.ru { background: var(--ru); } .k.eg { background: var(--eg); }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .top { grid-template-columns: auto auto; }
+  .chips { grid-column: 1 / -1; justify-content: flex-start; }
+  .top { position: static; }
+}
+@media (max-width: 560px) {
+  .row2 { grid-template-columns: minmax(0, 1fr); }
+  .chip { min-width: 0; flex: 1 1 30%; padding: 4px 8px; }
+  .chip-v { font-size: 1.15rem; }
+  .paper-sheet { padding: 18px 16px; font-size: 1.04rem; }
+  .modal { padding: 16px 14px; }
+  .rel > div { grid-template-columns: 96px 1fr 56px; }
+  .area { grid-template-columns: 110px 1fr 32px; }
+  .endbar .hint { display: none; }
+  .endbar .btn { flex: 1; }
+}
+@media (prefers-reduced-motion: no-preference) { .modal { animation: rise .22s ease-out; } @keyframes rise { from { transform: translateY(8px); } to { transform: none; } } }
+</style>
+<div id="app" lang="tr"></div>
+<script>
+// ==MODEL START==
+// Proje 1815 · S6 paper loop · game model (pure, deterministic: same seed, same choices, same game)
+var M = (function () {
+  'use strict';
+  var START = 1816, END = 1840;
+
+  function fnv(str) { var h = 2166136261; for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function draw(s, purpose) { // one independent draw per (seed, year, purpose): a new draw never shifts another
+    var a = fnv(s.seed + '|' + s.year + '|' + purpose);
+    a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+  function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+  function r1(x) { return Math.round(x * 10) / 10; }
+  function r2(x) { return Math.round(x * 100) / 100; }
+
+  var REGIONS = { Rumeli: 22, Anadolu: 20, Suriye: 9, Irak: 5, Mora: 4, Eflak: 5, Sirbistan: 2, Girit: 3 };
+  var REGION_NAMES = { Rumeli: 'Rumeli', Anadolu: 'Anadolu', Suriye: 'Suriye', Irak: 'Irak', Mora: 'Mora', Eflak: 'Eflak-Boğdan', Sirbistan: 'Sırbistan', Girit: 'Girit' };
+
+  var TECHS = {
+    kapsul: { n: 'Kapsüllü tüfek', area: 'Askerî', cost: 7, world: 1825, eff: 'Tüfekhane modern tüfek üretir: Nizam teçhizatı +0,12' },
+    doktrin: { n: 'Modern ordu doktrini', area: 'Askerî', cost: 7, world: 1815, eff: 'Askerî eğitim 2. seviyeye çıkabilir' },
+    kurmay: { n: 'Kurmay usulü', area: 'Askerî', cost: 10, world: 1820, req: 'doktrin', eff: 'Askerî eğitim 3. seviyeye çıkabilir' },
+    buhar: { n: 'Buhar makinesi', area: 'Sanayi', cost: 8, world: 1800, eff: 'Sanayi teşviki 2. seviye; Buharlı tersane' },
+    dokuma: { n: 'Mekanik dokuma', area: 'Sanayi', cost: 8, world: 1810, req: 'buhar', eff: 'Feshane geliri ×1,5; Sanayi teşviki 3. seviye' },
+    nobet: { n: 'Ürün nöbeti', area: 'Tarım', cost: 6, world: 1800, eff: 'Ziraat ıslahı 2. seviye' },
+    tohum: { n: 'Islah tohumları', area: 'Tarım', cost: 8, world: 1830, req: 'nobet', eff: 'Ziraat ıslahı 3. seviye' },
+    istatistik: { n: 'İstatistik', area: 'Devlet', cost: 6, world: 1820, eff: 'Merkezî vergi yasası açılır' },
+    sayim: { n: 'Nüfus sayımı', area: 'Devlet', cost: 6, world: 1801, eff: 'Zorunlu askerlik yasası açılır' },
+    hukuk: { n: 'Hukuk usulü', area: 'Devlet', cost: 9, world: 1804, req: 'istatistik', eff: 'Tanzimat yasası açılır' },
+    ogretmen: { n: 'Öğretmen yetiştirme', area: 'Maarif', cost: 6, world: 1810, eff: 'Maarif 2. seviyeye çıkabilir' },
+    lab: { n: 'Laboratuvar bilimleri', area: 'Maarif', cost: 10, world: 1825, req: 'ogretmen', eff: 'Maarif 3. seviye; araştırma +1' }
+  };
+
+  var INST = {
+    ae: { n: 'Askerî eğitim', area: 'Ordu', rp: [0, 3, 4, 5], up: [0, 4, 8, 12], req: [null, null, 'doktrin', 'kurmay'],
+      what: 'Nizam askerinin eğitimi ×(0,85 + 0,14 × seviye); komuta +0,06 × seviye', who: 'Yeniçeriler −4 / seviye (Ocak varken)' },
+    si: { n: 'Sanayi teşviki', area: 'Sanayi', rp: [0, 3, 4, 5], up: [0, 3, 7, 12], req: [null, null, 'buhar', 'dokuma'],
+      what: 'Atölye geliri +%20 / seviye; inşaat kapasitesi +1 (1. ve 3. seviyede)', who: 'Tüccar ve esnaf +1 / seviye' },
+    zi: { n: 'Ziraat ıslahı', area: 'Tarım', rp: [0, 2, 3, 4], up: [0, 2, 5, 9], req: [null, null, 'nobet', 'tohum'],
+      what: 'Toprak vergisi +%8 / seviye; ekonomi daha hızlı büyür; kıtlıkların etkisi azalır', who: 'Ayanlar +1 / seviye' },
+    mt: { n: 'Maarif teşkilatı', area: 'Maarif', rp: [0, 3, 4, 5], up: [0, 3, 7, 12], req: [null, null, 'ogretmen', 'lab'],
+      what: 'Araştırma +1,5 / seviye', who: 'Ulema −4 / seviye, Kalemiye +1 / seviye' }
+  };
+
+  var PROJ = {
+    tufekhane: { n: 'İzmir Tüfekhanesi', cost: 18, yrs: 2, up: 2, desc: 'Her yıl 6 bin tüfek. Kapsüllü tüfek bilinirse Nizam teçhizatı +0,12.' },
+    tophane: { n: 'Tophane ıslahı', cost: 14, yrs: 2, up: 2, desc: 'Sahra topçusu: bütün ordunun teçhizatı +0,08.' },
+    feshane: { n: 'Feshane dokuma atölyesi', cost: 16, yrs: 2, up: 1, desc: 'Mamul geliri +6 / yıl (Mekanik dokumayla ×1,5). Esnaf −2.' },
+    sose: { n: 'İstanbul–Edirne şosesi', cost: 14, yrs: 2, up: 1, desc: 'Balkan cephesinde ikmal +0,12. Gelir +2 / yıl.' },
+    rusdiye: { n: 'Rüşdiye mektepleri', cost: 10, yrs: 1, up: 2, reqInst: ['mt', 1], desc: 'Araştırma +1 / yıl. Ulema −2.' },
+    ciftlik: { n: 'Örnek çiftlik', cost: 8, yrs: 1, up: 1, reqInst: ['zi', 1], desc: 'Toprak vergisi +%5.' },
+    harbiye: { n: 'Mekteb-i Harbiye', cost: 16, yrs: 2, up: 3, reqInst: ['ae', 2], desc: 'Subay okulu: komuta +0,12.' },
+    darulfunun: { n: 'Darülfünun', cost: 20, yrs: 3, up: 4, reqInst: ['mt', 2], desc: 'Araştırma +2 / yıl. Ulema −2.' },
+    tersane: { n: 'Buharlı tersane', cost: 22, yrs: 3, up: 3, reqTech: 'buhar', desc: 'Deniz yoluyla ikmal: Mora ve Suriye cephesinde +0,15.' }
+  };
+
+  var LAWS = {
+    vergi: { n: 'Merkezî vergi', sub: 'İltizamın kaldırılması', rp: 4, req: 'istatistik', delay: 2,
+      desc: 'Vergi verimi 0,60 → 0,75 (iki yıl sonra). Ayanlar −10, Kalemiye +4.' },
+    ocak: { n: "Ocak'ın kaldırılması", sub: 'Yeniçeri meselesi', rp: 5,
+      desc: 'Başarırsa: Yeniçeri gideri (27 / yıl) kalkar, Askerî eğitim kilidi açılır, ama 42 bin kişilik kuvvet de gider. Başaramazsa isyan.' },
+    redif: { n: 'Zorunlu askerlik', sub: 'Redif teşkilatı', rp: 4, req: 'sayim', delay: 1,
+      desc: 'Nizam maliyeti 0,50 → 0,38 / bin; yıllık toplama 10 → 18 bin. Ayanlar −5, Ulema −2. Ocak kalkmış olmalı.' },
+    tanzimat: { n: 'Tanzimat Fermanı', sub: 'Gülhane Hatt-ı Hümayunu', rp: 6, req: 'hukuk', delay: 1,
+      desc: 'Vergi verimi +0,05; İngiltere ve Fransa +15; dış borç faizi −1 puan. Ulema −8, Kalemiye +6, Tüccar +4. Maarif en az 1. seviye olmalı.' }
+  };
+
+  var ACTORS = [
+    { id: 'yen', n: 'Yeniçeriler' }, { id: 'ule', n: 'Ulema' }, { id: 'aya', n: 'Ayanlar' },
+    { id: 'kal', n: 'Kalemiye' }, { id: 'tuc', n: 'Tüccar ve esnaf' }
+  ];
+
+  function newGame(seed) {
+    var s = {
+      v: 1, seed: String(seed), year: START, treasury: 30, growth: 1, D: 0, F: 0, rateExtra: 0,
+      tax: 1, trade: 'protect', treaty: false, bankrupt: false,
+      lost: {}, // region -> who took it
+      jan: 60, ocak: true, ocakRetry: START, nizam: 0, nizamTarget: 0, rifles: 0, imported: 0,
+      inst: { ae: { lvl: 0, pend: null }, si: { lvl: 0, pend: null }, zi: { lvl: 0, pend: null }, mt: { lvl: 0, pend: null } },
+      laws: {}, // id -> {year, wait}
+      eff: 0.6, known: {}, focus: null, prog: {},
+      adv: { fr: false, gb: false }, concessions: [], projects: {},
+      temp: [], rp: 4, rel: { GB: 45, FR: 45 }, guarantee: false, ruProtect: false,
+      tension: 30, serbia: 'ottoman', greek: 'none', greekYears: 0, navarino: false, egyptCrisis: false,
+      egypt: { men: 30, train: 1.0, equip: 0.95, cmd: 0.95, loyalty: 70, tribute: 3, crete: false, syria: false, independent: false },
+      russia: { men: 60, train: 1.05, equip: 1.02, cmd: 1.0 },
+      dipDone: false, pendingImport: 0, events: [], decisions: [], chron: [], history: [], over: false, endReason: null,
+      offers: {}, started: Date.now()
+    };
+    snapshot(s);
+    s.events = genEvents(s);
+    return s;
+  }
+
+  // ---------- derived values, each with its reasons ----------
+  function instEff(s, id) { return s.inst[id].lvl; }
+  function knows(s, t) { return !!s.known[t]; }
+  function built(s, p) { return s.projects[p] === 'done'; }
+  function regionOn(s, r) { return !s.lost[r]; }
+  function capacity(s) { var c = 2; if (s.inst.si.lvl >= 1) c++; if (s.inst.si.lvl >= 3) c++; return c; }
+  function building(s) { var n = 0; for (var k in s.projects) if (s.projects[k] !== 'done') n++; return n; }
+
+  function stabilityLines(s) {
+    var L = []; // {actor, v, why}
+    var ae = instEff(s, 'ae'), mt = instEff(s, 'mt'), si = instEff(s, 'si'), zi = instEff(s, 'zi');
+    if (s.ocak) {
+      L.push({ a: 'yen', v: -3, why: 'Ayrıcalıklarından endişeliler' });
+      if (s.nizam > 0) L.push({ a: 'yen', v: -Math.round(s.nizam / 5), why: 'Nizam askeri: ' + s.nizam + ' bin' });
+      if (ae > 0) L.push({ a: 'yen', v: -4 * ae, why: 'Askerî eğitim ' + ae + '. seviye' });
+      if (s.adv.fr) L.push({ a: 'yen', v: -3, why: 'Fransız subaylar' });
+    }
+    if (mt === 0 && !s.laws.tanzimat) L.push({ a: 'ule', v: 2, why: 'Geleneksel eğitim sürüyor' });
+    if (mt > 0) L.push({ a: 'ule', v: -4 * mt, why: 'Maarif teşkilatı ' + mt + '. seviye' });
+    if (built(s, 'rusdiye')) L.push({ a: 'ule', v: -2, why: 'Rüşdiye mektepleri' });
+    if (built(s, 'darulfunun')) L.push({ a: 'ule', v: -2, why: 'Darülfünun' });
+    if (s.adv.fr) L.push({ a: 'ule', v: -2, why: 'Fransız subaylar' });
+    if (s.laws.redif) L.push({ a: 'ule', v: -2, why: 'Zorunlu askerlik' });
+    if (s.laws.tanzimat) L.push({ a: 'ule', v: -8, why: 'Tanzimat Fermanı' });
+    L.push({ a: 'aya', v: -2, why: 'Merkezin taşradaki gücü' });
+    if (s.tax === 2) L.push({ a: 'aya', v: -6, why: 'Yüksek vergi' });
+    if (s.tax === 0) L.push({ a: 'aya', v: 4, why: 'Düşük vergi' });
+    if (s.laws.vergi) L.push({ a: 'aya', v: -10, why: 'Merkezî vergi: iltizam kalktı' });
+    if (s.laws.redif) L.push({ a: 'aya', v: -5, why: 'Zorunlu askerlik' });
+    if (zi > 0) L.push({ a: 'aya', v: zi, why: 'Ziraat ıslahı' });
+    L.push({ a: 'kal', v: 2, why: 'Düzenli merkezî devlet' });
+    var lv = s.inst.ae.lvl + s.inst.si.lvl + s.inst.zi.lvl + s.inst.mt.lvl;
+    if (lv > 0) L.push({ a: 'kal', v: Math.min(5, lv), why: 'Kurum seviyeleri toplamı ' + lv });
+    if (s.laws.vergi) L.push({ a: 'kal', v: 4, why: 'Merkezî vergi' });
+    if (s.laws.tanzimat) L.push({ a: 'kal', v: 6, why: 'Tanzimat Fermanı' });
+    if (s.tax === 2) L.push({ a: 'tuc', v: -4, why: 'Yüksek vergi' });
+    if (s.tax === 0) L.push({ a: 'tuc', v: 2, why: 'Düşük vergi' });
+    if (s.trade === 'free' || s.treaty) L.push({ a: 'tuc', v: -3, why: s.treaty ? 'Gümrük tavanı: ucuz İngiliz malı esnafı vuruyor' : 'Serbest ticaret: tüccar kazanıyor, esnaf kaybediyor' });
+    if (built(s, 'feshane')) L.push({ a: 'tuc', v: -2, why: 'Feshane: loncalar fabrikaya karşı' });
+    if (si > 0) L.push({ a: 'tuc', v: si, why: 'Sanayi teşviki' });
+    if (s.concessions.indexOf('izmir') >= 0) L.push({ a: 'tuc', v: 2, why: 'İzmir limanı ticareti' });
+    if (s.laws.tanzimat) L.push({ a: 'tuc', v: 4, why: 'Tanzimat: mal ve can güvencesi' });
+    return L;
+  }
+  function stabilityBreak(s) {
+    var L = stabilityLines(s), by = {}, out = [];
+    ACTORS.forEach(function (a) { by[a.id] = 0; });
+    L.forEach(function (l) { by[l.a] += l.v; });
+    ACTORS.forEach(function (a) { if (a.id === 'yen' && !s.ocak) return; out.push({ n: a.n, v: by[a.id], why: L.filter(function (l) { return l.a === a.id; }) }); });
+    var temps = s.temp.map(function (t) { return { n: t.n, v: Math.round(t.v), why: [] }; }).filter(function (t) { return t.v !== 0; });
+    var total = 50; out.forEach(function (o) { total += o.v; }); temps.forEach(function (t) { total += t.v; });
+    return { total: clamp(Math.round(total), 0, 100), actors: out, temps: temps };
+  }
+  function stability(s) { return stabilityBreak(s).total; }
+
+  function landBase(s) { var b = 0; for (var r in REGIONS) if (regionOn(s, r)) b += REGIONS[r]; return Math.round(b * (s.growth || 1) * 10) / 10; }
+  function incomeBreak(s, harvestMult) {
+    var L = [], st = stability(s);
+    var taxMult = [0.85, 1, 1.2][s.tax];
+    var agri = 1 + 0.08 * instEff(s, 'zi') + (built(s, 'ciftlik') ? 0.05 : 0);
+    var hm = harvestMult || 1;
+    var land = landBase(s) * taxMult * s.eff * agri * hm;
+    L.push({ n: 'Toprak vergisi', v: land, why: 'Eyaletler ' + landBase(s) + ' × vergi ' + String(taxMult).replace('.', ',') + ' × verim ' + String(r2(s.eff)).replace('.', ',') + (agri > 1 ? ' × tarım ' + String(r2(agri)).replace('.', ',') : '') + (hm < 1 ? ' × kıtlık ' + String(r2(hm)).replace('.', ',') : '') });
+    var cust = s.treaty ? 5 : (s.trade === 'free' ? 7 : 12);
+    L.push({ n: 'Gümrük', v: cust, why: s.treaty ? 'Ticaret antlaşması: gümrük tavanı %5' : (s.trade === 'free' ? 'Serbest ticaret' : 'Korumacılık') });
+    var ind = 14 * (0.8 + st / 250);
+    L.push({ n: 'Dolaylı vergiler', v: ind, why: 'İstikrar ' + st + ' (düzen içinde daha çok toplanır)' });
+    if (built(s, 'feshane')) {
+      var f = 6 * (knows(s, 'dokuma') ? 1.5 : 1) * (1 + 0.2 * instEff(s, 'si')) * ((s.trade === 'free' || s.treaty) ? 0.6 : 1);
+      L.push({ n: 'Feshane', v: f, why: (knows(s, 'dokuma') ? 'Mekanik dokuma ×1,5; ' : '') + ((s.trade === 'free' || s.treaty) ? 'ucuz ithal kumaş ×0,6' : 'korunan iç pazar') });
+    }
+    if (built(s, 'sose')) L.push({ n: 'Şose ticareti', v: 2, why: 'İstanbul–Edirne şosesi' });
+    if (s.concessions.indexOf('izmir') >= 0) L.push({ n: 'İzmir limanı', v: 3.6, why: '6 gelir; %40 İngiliz şirketinin' });
+    if (!s.egypt.independent && s.egypt.loyalty >= 30 && s.egypt.tribute > 0) L.push({ n: 'Mısır haracı', v: s.egypt.tribute, why: 'Mehmed Ali sadık (bağlılık ' + Math.round(s.egypt.loyalty) + ')' });
+    if (s.bankrupt) { var cut = -0.5 * (cust + ind); L.push({ n: 'Alacaklılar idaresi', v: cut, why: 'İflas: gümrük ve dolaylı vergilerin yarısı alacaklılara' }); }
+    var tot = 0; L.forEach(function (l) { tot += l.v; });
+    return { total: tot, lines: L };
+  }
+  function nizamCost(s) { return s.laws.redif ? 0.38 : 0.5; }
+  function foreignRate(s) {
+    var st = stability(s);
+    return Math.max(4, 5 + Math.max(0, (55 - st) / 10) + (s.F > 40 ? 1 : 0) - (s.laws.tanzimat ? 1 : 0) + s.rateExtra);
+  }
+  function expenseBreak(s) {
+    var L = [];
+    if (s.ocak) L.push({ n: 'Yeniçeri ulufesi', v: s.jan * 0.45, why: s.jan + ' bin × 0,45' });
+    if (s.nizam > 0) L.push({ n: 'Nizam ordusu', v: s.nizam * nizamCost(s), why: s.nizam + ' bin × ' + String(nizamCost(s)).replace('.', ',') });
+    L.push({ n: 'Donanma', v: 6, why: 'Kalyon filosu' });
+    L.push({ n: 'İdare', v: 14, why: 'Vilayet ve kalem' });
+    L.push({ n: 'Saray', v: 10, why: 'Saray ve hanedan' });
+    var iu = 0, why = [];
+    for (var k in INST) { var lv = s.inst[k].lvl; var p = s.inst[k].pend; var l2 = p ? p.to : lv; if (INST[k].up[l2] > 0) { iu += INST[k].up[l2]; why.push(INST[k].n + ' ' + l2); } }
+    if (iu > 0) L.push({ n: 'Kurumların bakımı', v: iu, why: why.join(', ') });
+    var pu = 0, pw = [];
+    for (var p2 in s.projects) if (s.projects[p2] === 'done') { pu += PROJ[p2].up; pw.push(PROJ[p2].n); }
+    if (pu > 0) L.push({ n: 'Yapıların bakımı', v: pu, why: pw.join(', ') });
+    if (s.adv.fr) L.push({ n: 'Fransız subay heyeti', v: 5, why: 'Maaşlar' });
+    if (s.adv.gb) L.push({ n: 'İngiliz mühendisler', v: 6, why: 'Lisans ve maaşlar' });
+    var intr = s.D * 0.08 + s.F * foreignRate(s) / 100;
+    if (intr > 0) L.push({ n: 'Faiz', v: intr, why: 'İç borç ' + Math.round(s.D) + ' × %8' + (s.F > 0 ? '; dış borç ' + Math.round(s.F) + ' × %' + String(r1(foreignRate(s))).replace('.', ',') : '') });
+    var tot = 0; L.forEach(function (l) { tot += l.v; });
+    return { total: tot, lines: L };
+  }
+  function rpGainBreak(s) {
+    var st = stability(s), L = [{ n: 'Taban', v: 2 }];
+    var b = Math.max(0, Math.floor((st - 40) / 10)); if (b) L.push({ n: 'İstikrar ' + st, v: b });
+    var kal = stabilityLines(s).filter(function (l) { return l.a === 'kal'; }).reduce(function (a, l) { return a + l.v; }, 0);
+    if (kal >= 6) L.push({ n: 'Güçlü Kalemiye', v: 1 });
+    var tot = 0; L.forEach(function (l) { tot += l.v; }); return { total: tot, lines: L };
+  }
+  function researchBreak(s) {
+    var L = [{ n: 'Taban (medrese ve tercüme odası)', v: 2 }];
+    var mt = instEff(s, 'mt'); if (mt) L.push({ n: 'Maarif teşkilatı ' + mt, v: 1.5 * mt });
+    if (built(s, 'rusdiye')) L.push({ n: 'Rüşdiye mektepleri', v: 1 });
+    if (built(s, 'darulfunun')) L.push({ n: 'Darülfünun', v: 2 });
+    if (knows(s, 'lab')) L.push({ n: 'Laboratuvar bilimleri', v: 1 });
+    var f = s.focus && TECHS[s.focus];
+    if (f && s.adv.fr && f.area === 'Askerî') L.push({ n: 'Fransız subaylar (askerî konular)', v: 3 });
+    if (f && s.adv.gb && f.area === 'Sanayi') L.push({ n: 'İngiliz mühendisler (sanayi konuları)', v: 3 });
+    var tot = 0; L.forEach(function (l) { tot += l.v; }); return { total: tot, lines: L };
+  }
+  function dependenceBreak(s) {
+    var L = [];
+    if (s.imported > 0) L.push({ n: 'Silahta dış tedarik', v: Math.min(25, Math.round(25 * s.imported / Math.max(1, s.rifles))) });
+    if (s.F > 0) L.push({ n: 'Dış borç', v: Math.min(30, Math.round(s.F * 0.5)) });
+    if (s.concessions.length) L.push({ n: 'Yabancı imtiyazlar', v: 12 * s.concessions.length });
+    if (s.treaty) L.push({ n: 'Gümrük tavanı', v: 15 });
+    var adv = (s.adv.fr ? 1 : 0) + (s.adv.gb ? 1 : 0); if (adv) L.push({ n: 'Yabancı danışmanlar', v: 4 * adv });
+    if (s.ruProtect) L.push({ n: 'Rus himayesi', v: 12 });
+    if (s.bankrupt) L.push({ n: 'İflas idaresi', v: 20 });
+    var tot = 0; L.forEach(function (l) { tot += l.v; }); return { total: Math.min(100, tot), lines: L };
+  }
+
+  // ---------- war ----------
+  var FRONTS = {
+    balkan: { n: 'Balkan cephesi', share: 0.7, supply: 0.95, fort: 1.2 },
+    syria: { n: 'Suriye cephesi', share: 0.5, supply: 0.8, fort: 1.0 },
+    mora: { n: 'Mora', share: 0.5, supply: 0.75, fort: 1.0 }
+  };
+  function ourSide(s, front) {
+    var F = FRONTS[front], janE = s.ocak ? s.jan * 0.7 : 0, tot = s.nizam + janE;
+    var men = tot * F.share; if (front === 'mora') men = Math.min(men, 45);
+    var w = tot > 0 ? s.nizam / tot : 0, ae = instEff(s, 'ae');
+    var rr = s.nizam > 0 ? Math.min(1, s.rifles / s.nizam) : 0;
+    var neq = 0.8 + 0.3 * rr + (knows(s, 'kapsul') && built(s, 'tufekhane') ? 0.12 : 0);
+    var equip = w * neq + (1 - w) * 0.78 + (built(s, 'tophane') ? 0.08 : 0);
+    var eqWhy = [];
+    if (s.nizam > 0) eqWhy.push('tüfek stoku ' + Math.round(s.rifles) + ' bin / Nizam ' + s.nizam + ' bin' + (built(s, 'tufekhane') ? ' (İzmir Tüfekhanesi)' : '') + (s.imported > 0 ? ' (ithal tüfek dahil)' : ''));
+    if (knows(s, 'kapsul') && built(s, 'tufekhane')) eqWhy.push('kapsüllü tüfek');
+    if (built(s, 'tophane')) eqWhy.push('Tophane ıslahı +0,08');
+    if (s.ocak) eqWhy.push('Yeniçerilerin eski çakmaklıları');
+    var train = w * (0.85 + 0.14 * ae) + (1 - w) * 0.72;
+    var trWhy = [];
+    if (s.nizam > 0) trWhy.push('Askerî eğitim ' + ae + '. seviye');
+    if (s.ocak) trWhy.push('Yeniçeriler talimsiz (' + Math.round(janE) + ' bin fiilî)');
+    var cmd = 0.85 + 0.06 * ae + (built(s, 'harbiye') ? 0.12 : 0) + (s.adv.fr ? 0.06 : 0);
+    var cmWhy = []; if (ae) cmWhy.push('Askerî eğitim ' + ae); if (built(s, 'harbiye')) cmWhy.push('Mekteb-i Harbiye +0,12'); if (s.adv.fr) cmWhy.push('Fransız subaylar +0,06');
+    var sup = F.supply, spWhy = [];
+    if (front === 'balkan' && built(s, 'sose')) { sup += 0.12; spWhy.push('İstanbul–Edirne şosesi +0,12'); }
+    if ((front === 'mora' || front === 'syria') && built(s, 'tersane')) { sup += 0.15; spWhy.push('Buharlı tersane +0,15'); }
+    if (front === 'syria' && s.concessions.indexOf('izmir') >= 0) { sup += 0.05; spWhy.push('İzmir limanı +0,05'); }
+    if (!spWhy.length) spWhy.push(front === 'balkan' ? 'eski yollar' : 'uzun kara yolu');
+    var wear = s.temp.filter(function (t) { return t.id === 'wear'; }).reduce(function (a, t) { return a + t.v; }, 0);
+    var mor = 0.75 + stability(s) / 200 + wear / 100;
+    var mrWhy = ['istikrar ' + stability(s)]; if (wear) mrWhy.push('savaş yorgunluğu');
+    var ter = F.fort, tWhy = [front === 'balkan' ? 'Tuna kaleleri (Şumnu, Silistre)' : 'açık arazi'];
+    return { men: men, f: [
+      { k: 'Teçhizat', v: equip, why: eqWhy.join('; ') },
+      { k: 'Eğitim', v: train, why: trWhy.join('; ') },
+      { k: 'Komuta', v: cmd, why: cmWhy.join('; ') || 'eski usul ağalar' },
+      { k: 'İkmal', v: sup, why: spWhy.join('; ') },
+      { k: 'Moral', v: mor, why: mrWhy.join('; ') },
+      { k: 'Arazi ve tahkimat', v: ter, why: tWhy.join('; ') }
+    ] };
+  }
+  function enemySide(s, who) {
+    if (who === 'russia') {
+      var R = s.russia;
+      return { n: 'Rus ordusu', men: R.men, f: [
+        { k: 'Teçhizat', v: R.equip, why: 'Tula fabrikaları' }, { k: 'Eğitim', v: R.train, why: 'Napolyon savaşları gazileri' },
+        { k: 'Komuta', v: R.cmd, why: 'kurmay heyeti' }, { k: 'İkmal', v: 0.9, why: 'Tuna ötesi uzun hat' },
+        { k: 'Moral', v: 1.0, why: '' }, { k: 'Arazi ve tahkimat', v: 1.0, why: 'saldıran taraf' }] };
+    }
+    if (who === 'egypt') {
+      var E = s.egypt;
+      return { n: 'Mısır ordusu', men: E.men * 0.6, f: [
+        { k: 'Teçhizat', v: E.equip, why: 'Mısır fabrikaları' }, { k: 'Eğitim', v: E.train, why: 'Fransız eğitmenler (Sève)' },
+        { k: 'Komuta', v: E.cmd, why: 'İbrahim Paşa' }, { k: 'İkmal', v: 0.95, why: 'deniz ve Suriye yolları' },
+        { k: 'Moral', v: 1.05, why: 'zaferler' }, { k: 'Arazi ve tahkimat', v: 1.0, why: 'saldıran taraf' }] };
+    }
+    var y = s.greekYears;
+    return { n: 'Mora isyancıları', men: 18 + 2 * y, f: [
+      { k: 'Teçhizat', v: 0.8, why: 'eski tüfekler, gönüllü silahları' }, { k: 'Eğitim', v: 0.65, why: 'düzensiz kuvvet' },
+      { k: 'Komuta', v: 0.8, why: 'kaptanlar' }, { k: 'İkmal', v: 0.9, why: 'yerel halk' },
+      { k: 'Moral', v: 1.15, why: 'bağımsızlık' }, { k: 'Arazi ve tahkimat', v: 1.25, why: 'dağlar' }] };
+  }
+  function power(side) { var q = 1; side.f.forEach(function (x) { q *= x.v; }); q = clamp(q, 0.3, 2.6); return { q: q, p: side.men * q }; }
+  function forecast(s, front, who) {
+    var a = ourSide(s, front), b = enemySide(s, who), pa = power(a), pb = power(b);
+    var ratio = pb.p > 0 ? pa.p / pb.p : 9, k = Math.pow(ratio, 2.5), win = k / (1 + k);
+    var weakest = null, wv = 99;
+    a.f.forEach(function (x, i) { var d = x.v / b.f[i].v; if (d < wv) { wv = d; weakest = x.k; } });
+    var lvl = win >= 0.65 ? 'Yüksek' : (win >= 0.4 ? 'Orta' : 'Düşük');
+    return { us: a, them: b, pa: pa, pb: pb, ratio: ratio, win: win, lo: clamp(win - 0.08, 0.02, 0.98), hi: clamp(win + 0.08, 0.02, 0.98), level: lvl, weakest: weakest };
+  }
+  function battle(s, front, who, purpose) {
+    var fc = forecast(s, front, who), d = draw(s, 'battle-' + purpose);
+    var won = d < fc.win;
+    var lossUs = Math.round(fc.us.men * (won ? 0.12 : 0.3) * 1000 / 100) * 100;
+    var lossThem = Math.round(fc.them.men * (won ? 0.3 : 0.12) * 1000 / 100) * 100;
+    s.rifles = Math.max(0, s.rifles * 0.75);
+    addTemp(s, 'wear', 'Savaş yorgunluğu', -6, 0.5);
+    return { won: won, fc: fc, lossUs: lossUs, lossThem: lossThem };
+  }
+
+  // ---------- helpers ----------
+  function addTemp(s, id, n, v, decay) { s.temp.push({ id: id, n: n, v: v, decay: decay || 0.4 }); }
+  function decide(s, t) { s.decisions.push({ y: s.year, t: t }); }
+  function chron(s, t) { s.chron.push({ y: s.year, t: t }); }
+  function loseRegion(s, r, who) { if (!s.lost[r]) { s.lost[r] = who; } }
+
+  // ---------- actions (the six verbs) ----------
+  function canAfford(s, c) { return s.treasury >= c; }
+  var A = {};
+  A.setTax = function (s, t) { if (s.tax === t) return; s.tax = t; decide(s, 'Vergi düzeyini "' + ['Düşük', 'Olağan', 'Yüksek'][t] + '" yaptın'); };
+  A.setTrade = function (s, t) { if (s.treaty || s.trade === t) return; s.trade = t; decide(s, t === 'free' ? 'Serbest ticarete geçtin' : 'Korumacılığa döndün'); };
+  A.borrowD = function (s) { var c = Math.min(15, 40 - s.D); if (c <= 0) return { ok: false, why: 'İç borç tavanı (40) dolu' }; s.D += c; s.treasury += c; decide(s, 'Galata bankerlerinden ' + c + ' borç aldın'); return { ok: true }; };
+  A.borrowFCheck = function (s) { if (s.bankrupt) return 'İflastan sonra dış borç verilmiyor'; if (Math.max(s.rel.GB, s.rel.FR) < 40) return 'Londra ve Paris ilişkileri 40\'ın altında'; if (s.F >= 90) return 'Dış borç tavanı'; return null; };
+  A.borrowF = function (s) { var w = A.borrowFCheck(s); if (w) return { ok: false, why: w }; s.F += 30; s.treasury += 30; decide(s, "Londra'dan 30 dış borç aldın (faiz %" + String(r1(foreignRate(s))).replace('.', ',') + ')'); return { ok: true }; };
+  A.repay = function (s) { if (s.treasury < 10) return { ok: false, why: 'Hazinede 10 yok' }; if (s.D + s.F <= 0) return { ok: false, why: 'Borç yok' }; var c = Math.min(10, s.F > 0 ? s.F : s.D); if (s.F > 0) s.F -= c; else s.D -= c; s.treasury -= c; decide(s, c + ' borç ödedin'); return { ok: true }; };
+  A.projectCheck = function (s, id) {
+    var P = PROJ[id]; if (s.projects[id]) return s.projects[id] === 'done' ? 'Tamamlandı' : 'Yapılıyor';
+    if (P.reqInst && s.inst[P.reqInst[0]].lvl < P.reqInst[1]) return INST[P.reqInst[0]].n + ' ' + P.reqInst[1] + '. seviye gerekli';
+    if (P.reqTech && !knows(s, P.reqTech)) return TECHS[P.reqTech].n + ' bilinmeli';
+    if (building(s) >= capacity(s)) return 'İnşaat kapasitesi dolu (' + capacity(s) + ')';
+    if (!canAfford(s, P.cost)) return 'Hazine yetmiyor (' + P.cost + ')';
+    return null;
+  };
+  A.project = function (s, id) { var w = A.projectCheck(s, id); if (w) return { ok: false, why: w }; var P = PROJ[id]; s.treasury -= P.cost; s.projects[id] = { yrs: P.yrs }; decide(s, P.n + ' inşaatını başlattın'); return { ok: true }; };
+  A.instCheck = function (s, id) {
+    var I = INST[id], st = s.inst[id]; if (st.pend) return 'Yeni seviye oturuyor (' + st.pend.yrs + ' yıl)';
+    var to = st.lvl + 1; if (to > 3) return 'En üst seviye';
+    if (id === 'ae' && s.ocak && to > 1) return "Ocak varken en fazla 1. seviye (Yeniçeri kilidi)";
+    if (I.req[to] && !knows(s, I.req[to])) return TECHS[I.req[to]].n + ' bilinmeli';
+    if (s.rp < I.rp[to]) return 'Reform gücü yetmiyor (' + I.rp[to] + ')';
+    return null;
+  };
+  A.raise = function (s, id) { var w = A.instCheck(s, id); if (w) return { ok: false, why: w }; var I = INST[id], st = s.inst[id], to = st.lvl + 1; s.rp -= I.rp[to]; st.pend = { to: to, yrs: 2 }; decide(s, I.n + ' kurumunu ' + to + '. seviyeye yükselttin'); return { ok: true }; };
+  A.lower = function (s, id) { var st = s.inst[id]; if (st.pend || st.lvl === 0) return { ok: false, why: 'Düşürülemez' }; st.lvl -= 1; decide(s, INST[id].n + ' kurumunu ' + st.lvl + '. seviyeye düşürdün'); return { ok: true }; };
+  A.ocakChance = function (s) {
+    var L = [{ n: 'Taban', v: 0.15 }];
+    L.push({ n: 'Nizam askeri ' + s.nizam + ' bin', v: 0.55 * s.nizam / (s.nizam + 30) });
+    var st = stability(s); L.push({ n: 'İstikrar ' + st, v: (st - 50) / 150 });
+    var ule = stabilityLines(s).filter(function (l) { return l.a === 'ule'; }).reduce(function (a, l) { return a + l.v; }, 0);
+    L.push(ule >= -4 ? { n: 'Ulema yanında (' + ule + ')', v: 0.08 } : { n: 'Ulema küskün (' + ule + ')', v: -0.05 });
+    if (s.adv.fr) L.push({ n: 'Fransız subaylar', v: 0.05 });
+    var p = 0; L.forEach(function (l) { p += l.v; }); return { p: clamp(p, 0.05, 0.92), lines: L };
+  };
+  A.lawCheck = function (s, id) {
+    var Lw = LAWS[id]; if (s.laws[id]) return 'Uygulandı';
+    if (id === 'ocak') {
+      if (!s.ocak) return 'Ocak kaldırıldı';
+      if (s.year < s.ocakRetry) return s.ocakRetry + "'den önce yeniden denenemez";
+      if (s.inst.ae.lvl < 1) return 'Askerî eğitim en az 1. seviye olmalı';
+      if (s.nizam < 15) return 'En az 15 bin Nizam askeri gerekli';
+    } else {
+      if (Lw.req && !knows(s, Lw.req)) return TECHS[Lw.req].n + ' bilinmeli';
+      if (id === 'redif' && s.ocak) return "Önce Ocak kaldırılmalı";
+      if (id === 'tanzimat' && s.inst.mt.lvl < 1) return 'Maarif en az 1. seviye olmalı';
+    }
+    if (s.rp < Lw.rp) return 'Reform gücü yetmiyor (' + Lw.rp + ')';
+    return null;
+  };
+  A.law = function (s, id) {
+    var w = A.lawCheck(s, id); if (w) return { ok: false, why: w }; var Lw = LAWS[id]; s.rp -= Lw.rp;
+    if (id === 'ocak') {
+      var ch = A.ocakChance(s), d = draw(s, 'ocak');
+      if (d < ch.p) {
+        s.ocak = false; s.jan = 0; s.rp += 3; addTemp(s, 'ocak', 'Vaka-i Hayriye: Ulema tedirgin', -4, 0.4);
+        s.tension = Math.min(100, s.tension + 8);
+        decide(s, "Ocak'ı kaldırmaya karar verdin (başarı ihtimali %" + Math.round(ch.p * 100) + ') ve başardın');
+        chron(s, "Ocak kaldırıldı. Yeniçeri gideri bitti; askerî eğitim kilidi açıldı. Rusya ordunun zayıf anını kolluyor.");
+        return { ok: true, result: { title: 'Vaka-i Hayriye', good: true, text: "Sadık topçular ve Nizam kışlası hazırdı; Ocak bir günde dağıtıldı. Yeniçerilerin yıllık 27'lik ulufesi bitti, ama 42 bin kişilik kuvvet de artık yok. Askerî eğitim 3. seviyeye kadar açık. Rusya bu boşluğu kolluyor (gerginlik +8)." } };
+      }
+      s.nizam = Math.round(s.nizam * 0.4); s.nizamTarget = Math.min(s.nizamTarget, s.nizam); s.inst.ae.lvl = 0; s.inst.ae.pend = null; s.rp = 0; s.ocakRetry = s.year + 4;
+      addTemp(s, 'revolt', 'Yeniçeri isyanı', -18, 0.35);
+      decide(s, "Ocak'ı kaldırmayı denedin (başarı ihtimali %" + Math.round(ch.p * 100) + ') ve isyan çıktı');
+      chron(s, 'Yeniçeri isyanı: Nizam kışlası yakıldı, askerî eğitim sıfırlandı.');
+      return { ok: true, result: { title: 'Yeniçeri isyanı', good: false, text: "Kazanlar devrildi. Nizam askerinin çoğu dağıldı (" + s.nizam + " bin kaldı), Askerî eğitim sıfırlandı, reform gücü tükendi. Ocak meselesi " + s.ocakRetry + "'e kadar yeniden açılamaz." } };
+    }
+    s.laws[id] = { year: s.year, wait: Lw.delay || 0 };
+    if (id === 'tanzimat') { s.rel.GB = Math.min(100, s.rel.GB + 15); s.rel.FR = Math.min(100, s.rel.FR + 15); addTemp(s, 'tanz', 'Tanzimat sarsıntısı', -6, 0.6); }
+    decide(s, Lw.n + ' yasasını uyguladın');
+    chron(s, Lw.n + ' ilan edildi.');
+    return { ok: true };
+  };
+  A.focus = function (s, t) { if (knows(s, t)) return; if (TECHS[t].req && !knows(s, TECHS[t].req)) return; if (s.focus !== t) { s.focus = t; decide(s, 'Araştırmayı "' + TECHS[t].n + '" konusuna verdin'); } };
+  A.advisorCheck = function (s, who) {
+    if (s.adv[who]) return null;
+    if (who === 'fr' && s.year < 1818) return '1818\'den itibaren';
+    if (who === 'gb' && s.year < 1820) return '1820\'den itibaren';
+    if (s.rel[who === 'fr' ? 'FR' : 'GB'] < 35) return 'İlişki 35\'in altında';
+    return null;
+  };
+  A.advisor = function (s, who) { var w = A.advisorCheck(s, who); if (w) return { ok: false, why: w }; s.adv[who] = !s.adv[who]; decide(s, (s.adv[who] ? '' : 'Görevine son verdin: ') + (who === 'fr' ? 'Fransız subay heyeti' : 'İngiliz mühendisler') + (s.adv[who] ? ' getirttin' : '')); return { ok: true }; };
+  A.importCost = function (s) { return (s.trade === 'free' || s.treaty) ? 10 : 12; };
+  A.importRifles = function (s) { var c = A.importCost(s); if (s.pendingImport) return { ok: false, why: 'Bu yılın siparişi verildi' }; if (!canAfford(s, c)) return { ok: false, why: 'Hazine yetmiyor (' + c + ')' }; s.treasury -= c; s.pendingImport = 20; decide(s, 'Belçika\'dan 20 bin tüfek ısmarladın'); return { ok: true }; };
+  A.setNizam = function (s, n) { n = clamp(Math.round(n / 5) * 5, 0, 120); if (n !== s.nizamTarget) { s.nizamTarget = n; } };
+  A.commitNizam = function (s) { decide(s, 'Nizam ordusunu ' + s.nizamTarget + ' bin hedefine ayarladın'); };
+  var FAVOR = { yen: 'Yeniçerilere ulufe bahşişi', ule: 'Ulemaya vakıf bağışı', aya: 'Ayanlara imtiyaz beratı', kal: 'Kalemiyeye terfi ve nişan', tuc: 'Esnafa vergi muafiyeti' };
+  A.favorCheck = function (s, a) { if (s.favorDone) return 'Bu yıl bir ihsan yapıldı'; if (a === 'yen' && !s.ocak) return 'Ocak yok'; if (s.treasury < 6) return 'Hazine yetmiyor (6)'; return null; };
+  A.favor = function (s, a) { var w = A.favorCheck(s, a); if (w) return { ok: false, why: w }; s.treasury -= 6; s.favorDone = true; addTemp(s, 'fav' + a, 'İhsan: ' + FAVOR[a].toLowerCase(), 5, 0.35); decide(s, FAVOR[a] + ' yaptın'); return { ok: true }; };
+  var DIP = {
+    gb: { n: 'İngiltere ile yakınlaş', cost: 3, eff: 'İngiltere +10' },
+    fr: { n: 'Fransa ile yakınlaş', cost: 3, eff: 'Fransa +10' },
+    calm: { n: "Rusya'yı yatıştır", cost: 0, eff: 'Rus gerginliği −12; Divan bunu taviz sayar (istikrar −3)' },
+    guarantee: { n: 'İngiliz garantisi iste', cost: 0, eff: 'Rus savaş eşiği 70 → 85; Mısır krizinde İngiliz desteği. Bedeli: gümrük tavanı antlaşması (gümrük 12 → 5)' },
+    reward: { n: "Mehmed Ali'ye paşalık ver", cost: 6, eff: 'Mısır bağlılığı +12' },
+    squeeze: { n: 'Mısır haracını artır', cost: 0, eff: 'Haraç +2 / yıl; Mısır bağlılığı −12' },
+    serbia: { n: "Sırbistan'a özerklik tanı", cost: 0, eff: 'Rus gerginliği −12; Sırbistan geliri (2) gider; istikrar −2' }
+  };
+  A.dipCheck = function (s, id) {
+    if (s.dipDone) return 'Bu yıl bir elçilik gönderildi';
+    var D = DIP[id]; if (!canAfford(s, D.cost)) return 'Hazine yetmiyor (' + D.cost + ')';
+    if (id === 'guarantee') { if (s.guarantee) return 'Garanti alındı'; if (s.rel.GB < 60) return 'İngiltere en az 60 olmalı'; }
+    if ((id === 'reward' || id === 'squeeze') && s.egypt.independent) return 'Mısır bağımsız';
+    if (id === 'serbia' && s.serbia !== 'ottoman') return 'Sırbistan zaten özerk';
+    return null;
+  };
+  A.dip = function (s, id) {
+    var w = A.dipCheck(s, id); if (w) return { ok: false, why: w }; var D = DIP[id]; s.treasury -= D.cost; s.dipDone = true;
+    if (id === 'gb') s.rel.GB = Math.min(100, s.rel.GB + 10);
+    if (id === 'fr') s.rel.FR = Math.min(100, s.rel.FR + 10);
+    if (id === 'calm') { s.tension = Math.max(0, s.tension - 12); addTemp(s, 'calm', "Rusya'ya taviz", -3, 0.5); }
+    if (id === 'guarantee') { s.guarantee = true; s.treaty = true; chron(s, 'İngiliz garantisi alındı; karşılığında gümrük tavanı antlaşması imzalandı.'); }
+    if (id === 'reward') s.egypt.loyalty = Math.min(100, s.egypt.loyalty + 12);
+    if (id === 'squeeze') { s.egypt.tribute += 2; s.egypt.loyalty -= 12; }
+    if (id === 'serbia') { s.serbia = 'autonomous'; loseRegion(s, 'Sirbistan', 'özerk'); s.tension = Math.max(0, s.tension - 12); addTemp(s, 'serb', 'Sırbistan tavizi', -2, 0.5); }
+    decide(s, D.n); return { ok: true };
+  };
+
+  // ---------- events ----------
+  function opt(id, label, eff, fn, disabled) { return { id: id, label: label, eff: eff, fn: fn, disabled: disabled || null }; }
+  function genEvents(s) {
+    var E = [], y = s.year, st = stability(s);
+    if (s.over) return E;
+    // Greek revolt
+    if (s.greek === 'none' && y >= 1820) {
+      var p = (y === 1821 ? 0.7 : 0.3) + (55 - st) / 100;
+      if (draw(s, 'greek') < p) E.push('greek_start');
+    } else if (s.greek === 'active') {
+      E.push(y >= 1828 ? 'greek_powers' : 'greek_continue');
+    }
+    if (s.greek === 'egypt' && !s.navarino && y >= 1827) E.push('navarino');
+    if (s.serbia === 'ottoman' && y >= 1817 && y <= 1826 && draw(s, 'serbia') < 0.3) E.push('serbia');
+    var thr = s.guarantee ? 85 : 70;
+    if (s.tension >= thr) E.push('russia_ultimatum');
+    if (!s.egyptCrisis && !s.egypt.independent && y >= 1828) {
+      var fe = forecast(s, 'syria', 'egypt');
+      if (fe.ratio < 1.25 || s.egypt.loyalty < 35) { if (draw(s, 'egyptcrisis') < 0.6 || y >= 1833) E.push('egypt_crisis'); }
+    }
+    if (y > START && draw(s, 'harvest') < 0.15) E.push('harvest');
+    if (s.ocak && s.nizam >= 25 && draw(s, 'janriot') < 0.3) E.push('jan_unrest');
+    if (!s.offers.izmir && y >= 1822 && y <= 1832 && draw(s, 'izmir') < 0.4) E.push('izmir_offer');
+    if (s.F >= 40 && !s.bankrupt && draw(s, 'creditors') < 0.4) E.push('creditors');
+    return E;
+  }
+
+  function eventCard(s, id) {
+    var y = s.year;
+    if (id === 'greek_start' || id === 'greek_continue') {
+      var fc = forecast(s, 'mora', 'rebels'), fe = egyptVsRebels(s);
+      return { id: id, title: id === 'greek_start' ? 'Mora isyanı' : 'Mora isyanı sürüyor', place: 'Mora, ' + y,
+        text: id === 'greek_start' ? 'Mora\'da Rum kaptanları ayaklandı; Tripoliçe kuşatıldı. Avrupa\'dan gönüllüler geliyor. Rusya "Ortodoks kardeşlerini" korumaktan söz ediyor.' : 'İsyan ' + (s.greekYears + 1) + '. yılında. Her yıl daha çok gönüllü ve silah geliyor (isyancılar ' + (18 + 2 * s.greekYears) + ' bin).',
+        forecast: { label: 'Kendi ordunla bastırma tahmini', fc: fc },
+        opts: [
+          opt('suppress', 'Kendi ordunla bastır', 'Muharebe: başarı ihtimali %' + Math.round(fc.lo * 100) + '–' + Math.round(fc.hi * 100) + '. Başarırsan Mora kalır, Rus gerginliği +8, İngiltere −5. Başaramazsan isyan sürer.', function () {
+            var b = battle(s, 'mora', 'rebels', 'mora' + s.greekYears);
+            if (b.won) { s.greek = 'kept'; s.tension = Math.min(100, s.tension + 8); s.rel.GB -= 5; addTemp(s, 'win', 'Mora\'da zafer', 4, 0.4); decide(s, 'Mora isyanını kendi ordunla bastırdın'); chron(s, 'Mora isyanı bastırıldı.'); }
+            else { s.greekYears++; decide(s, 'Mora isyanını kendi ordunla bastırmayı denedin, başaramadın'); chron(s, 'Mora\'da yenilgi; isyan sürüyor.'); }
+            return { title: b.won ? 'Mora\'da zafer' : 'Mora\'da yenilgi', good: b.won, battle: b };
+          }),
+          opt('egypt', "Mehmed Ali'den yardım iste", 'Mısır ordusu bastırır (ihtimal %' + Math.round(fe * 100) + '). Bedeli: Girit Mısır\'a geçer, Mısır güçlenir, Rus gerginliği +10, İngiltere −8.', function () {
+            var ok = draw(s, 'egyptmora' + s.greekYears) < fe;
+            if (ok) { s.greek = 'egypt'; s.egypt.crete = true; loseRegion(s, 'Girit', 'Mısır'); s.egypt.loyalty = Math.min(100, s.egypt.loyalty + 10); s.egypt.men += 4; s.egypt.train += 0.03; s.tension = Math.min(100, s.tension + 10); s.rel.GB -= 8; decide(s, "Mora isyanı için Mehmed Ali'den yardım istedin; Girit'i ona verdin"); chron(s, 'İbrahim Paşa Mora\'yı bastırdı; Girit Mısır\'ın.'); return { title: 'İbrahim Paşa Mora\'da', good: true, text: 'Mısır ordusu isyanı bastırdı. Girit artık Mehmed Ali\'nin; Mısır ordusu tecrübe kazandı (asker +4 bin, eğitim +0,03). Avrupa başkentleri tedirgin.' }; }
+            s.greekYears++; decide(s, "Mehmed Ali'den yardım istedin ama Mısır ordusu da bastıramadı"); return { title: 'Mısır ordusu da durduramadı', good: false, text: 'İsyan sürüyor.' };
+          }),
+          opt('autonomy', 'Özerkliği kabul et', 'Mora geliri (4) gider; Divan bunu yenilgi sayar (istikrar −8); Rus gerginliği −8; İngiltere +8.', function () {
+            s.greek = 'autonomy'; loseRegion(s, 'Mora', 'özerk Yunanistan'); addTemp(s, 'humil', 'Mora\'nın kaybı', -8, 0.35); s.tension = Math.max(0, s.tension - 8); s.rel.GB += 8; decide(s, 'Mora\'ya özerklik tanıdın'); chron(s, 'Mora özerk oldu.'); return { title: 'Mora özerk', good: null, text: 'Büyük güçlerin arabuluculuğuyla Mora özerk bir Yunan devleti oldu.' };
+          })
+        ] };
+    }
+    if (id === 'greek_powers') return { id: id, title: 'Büyük güçler araya giriyor', place: 'Londra Protokolü, ' + y, text: 'İsyan yedi yıldır bitmedi. İngiltere, Fransa ve Rusya Mora\'nın özerkliğini dayatıyor.', opts: [
+      opt('accept', 'Kabul et', 'Mora gider; istikrar −6.', function () { s.greek = 'autonomy'; loseRegion(s, 'Mora', 'özerk Yunanistan'); addTemp(s, 'humil', 'Mora\'nın kaybı', -6, 0.35); decide(s, 'Büyük güçlerin Mora özerkliğini kabul ettin'); chron(s, 'Mora özerk oldu.'); return { title: 'Mora özerk', good: null, text: 'Mora artık özerk.' }; }),
+      opt('refuse', 'Reddet', 'Rus gerginliği +20; Mora yine de gider; İngiltere −10.', function () { s.greek = 'autonomy'; loseRegion(s, 'Mora', 'özerk Yunanistan'); s.tension = Math.min(100, s.tension + 20); s.rel.GB -= 10; decide(s, 'Büyük güçlerin Mora önerisini reddettin'); chron(s, 'Navarin: birleşik filo Mora\'yı ayırdı.'); return { title: 'Navarin', good: false, text: 'Birleşik filo Navarin\'de donanmayı batırdı; Mora yine de ayrıldı.' }; })] };
+    if (id === 'navarino') {
+      var safe = s.rel.GB >= 65;
+      return { id: id, title: 'Navarin', place: 'Navarin Körfezi, ' + y, text: 'Mısır\'ın Mora\'daki sert yönetimi Avrupa\'yı ayağa kaldırdı. Birleşik filo Mora\'nın özerkliğini istiyor.' + (safe ? ' İngiltere ile ilişkin iyi (' + Math.round(s.rel.GB) + '); Londra arabulucu olmayı öneriyor.' : ''),
+        opts: [opt('ok', safe ? 'Londra\'nın arabuluculuğunu kabul et' : 'Boyun eğ', safe ? 'Mora kalır ama İbrahim Paşa çekilir; İngiltere +5.' : 'Mora özerk olur; istikrar −6.', function () {
+          s.navarino = true;
+          if (safe) { s.rel.GB += 5; decide(s, "Navarin krizinde İngiltere'nin arabuluculuğunu kabul ettin"); return { title: 'Mora kaldı', good: true, text: 'İngiliz arabuluculuğuyla Mora sende kaldı.' }; }
+          loseRegion(s, 'Mora', 'özerk Yunanistan'); addTemp(s, 'humil', 'Mora\'nın kaybı', -6, 0.35); decide(s, 'Navarin\'den sonra Mora\'nın özerkliğine boyun eğdin'); chron(s, 'Navarin: Mora özerk.'); return { title: 'Mora özerk', good: false, text: 'Mora özerk oldu.' }; })] };
+    }
+    if (id === 'serbia') return { id: id, title: 'Sırp meselesi', place: 'Belgrad, ' + y, text: 'Rusya, Sırbistan\'a özerklik verilmesini istiyor. Miloš Obrenović bekliyor.', opts: [
+      opt('grant', 'Özerklik tanı', 'Sırbistan geliri (2) gider; Rus gerginliği −12; istikrar −2.', function () { s.serbia = 'autonomous'; loseRegion(s, 'Sirbistan', 'özerk'); s.tension = Math.max(0, s.tension - 12); addTemp(s, 'serb', 'Sırbistan tavizi', -2, 0.5); decide(s, "Sırbistan'a özerklik tanıdın"); chron(s, 'Sırbistan özerk oldu.'); return { title: 'Sırbistan özerk', good: null, text: 'Rusya memnun; Belgrad artık kendini yönetiyor.' }; }),
+      opt('refuse', 'Reddet', 'Rus gerginliği +12.', function () { s.tension = Math.min(100, s.tension + 12); decide(s, 'Rusya\'nın Sırbistan isteğini reddettin'); return { title: 'Ret', good: null, text: 'Petersburg notunu sertleştirdi.' }; })] };
+    if (id === 'russia_ultimatum' || id === 'russia_continue') {
+      var fr = forecast(s, 'balkan', 'russia');
+      var cont = id === 'russia_continue';
+      return { id: id, title: cont ? 'Rus ordusu Edirne yolunda' : 'Rus ültimatomu', place: cont ? 'Edirne, ' + y : 'Petersburg, ' + y, text: cont ? 'Ruslar Balkan dağlarını aştı. Barış mı, son savunma mı?' : 'Rusya gerginliğin bedelini istiyor: Eflak-Boğdan üzerinde himaye ve tazminat. Reddedersen Tuna\'yı geçecek.',
+        forecast: { label: '"Bugün savaşsaydık": Balkan cephesi', fc: fr },
+        opts: [
+          opt('concede', cont ? 'Barış iste' : 'Şartları kabul et', 'Eflak-Boğdan geliri (5) gider; ' + (cont ? '40' : '20') + ' tazminat (iç borç olarak); istikrar −' + (cont ? 12 : 8) + '; gerginlik sıfırlanır.', function () {
+            loseRegion(s, 'Eflak', 'Rus himayesi'); s.D += cont ? 40 : 20; addTemp(s, 'humil', cont ? 'Edirne barışı' : 'Rus şartları', cont ? -12 : -8, 0.35); s.tension = 20; decide(s, cont ? 'Rus savaşında barış istedin' : 'Rus ültimatomunu kabul ettin'); chron(s, cont ? 'Edirne Antlaşması: Eflak-Boğdan Rus himayesinde, tazminat 40.' : 'Rus şartları kabul edildi.'); return { title: cont ? 'Edirne Antlaşması' : 'Taviz', good: false, text: 'Eflak-Boğdan Rus himayesine girdi.' };
+          }),
+          opt('fight', cont ? 'Edirne\'de savun' : 'Savaş', 'Muharebe: başarı ihtimali %' + Math.round(fr.lo * 100) + '–' + Math.round(fr.hi * 100) + '. Kazanırsan istikrar +8, reform gücü +3, gerginlik sıfırlanır. Kaybedersen ' + (cont ? 'ağır barış: Eflak-Boğdan ve Sırbistan, tazminat 60.' : 'Ruslar ilerler.'), function () {
+            var b = battle(s, 'balkan', 'russia', 'ru' + (cont ? 'c' : 'a'));
+            if (b.won) { s.tension = 15; addTemp(s, 'win', 'Rus ordusunu durdurdun', 8, 0.35); s.rp += 3; s.russia.men -= 8; decide(s, cont ? 'Edirne\'de Ruslara karşı savundun ve kazandın' : 'Rus ültimatomunu reddedip savaştın ve kazandın'); chron(s, 'Ruslar Tuna\'da durduruldu.'); return { title: 'Ruslar durduruldu', good: true, battle: b }; }
+            if (cont) { loseRegion(s, 'Eflak', 'Rus himayesi'); loseRegion(s, 'Sirbistan', 'özerk'); s.serbia = 'autonomous'; s.D += 60; addTemp(s, 'humil', 'Ağır barış', -15, 0.35); s.tension = 20; decide(s, 'Edirne\'de savundun ve kaybettin'); chron(s, 'Ağır barış: Eflak-Boğdan ve Sırbistan elden çıktı, tazminat 60.'); return { title: 'Ağır barış', good: false, battle: b }; }
+            s.pendingWar = true; decide(s, 'Rus ültimatomunu reddedip savaştın ve kaybettin'); chron(s, 'Tuna\'da yenilgi; Ruslar ilerliyor.'); return { title: 'Tuna\'da yenilgi', good: false, battle: b };
+          })] };
+    }
+    if (id === 'egypt_crisis') {
+      var fe2 = forecast(s, 'syria', 'egypt');
+      var gbOk = s.guarantee || s.rel.GB >= 55, ruOk = s.tension < 45;
+      return { id: id, title: 'Mısır meselesi', place: 'Konya, ' + y, text: 'Mehmed Ali Suriye\'yi istiyor; İbrahim Paşa\'nın ordusu Toros\'ta. Mısır ordusu ' + Math.round(s.egypt.men) + ' bin, eğitimi ×' + String(r2(s.egypt.train)).replace('.', ',') + '.',
+        forecast: { label: '"Bugün savaşsaydık": Suriye cephesi', fc: fe2 },
+        opts: [
+          opt('fight', 'Savaş', 'Muharebe: başarı ihtimali %' + Math.round(fe2.lo * 100) + '–' + Math.round(fe2.hi * 100) + '. Kaybedersen Suriye gider ve Mısır fiilen bağımsız olur.', function () {
+            s.egyptCrisis = true; var b = battle(s, 'syria', 'egypt', 'konya');
+            if (b.won) { s.egypt.men -= 15; s.egypt.loyalty = 50; addTemp(s, 'win', 'Konya zaferi', 8, 0.35); s.rp += 3; decide(s, 'Mehmed Ali\'ye karşı savaştın ve kazandın'); chron(s, 'İbrahim Paşa Konya\'da yenildi.'); return { title: 'Konya zaferi', good: true, battle: b }; }
+            loseRegion(s, 'Suriye', 'Mısır'); s.egypt.syria = true; s.egypt.independent = true; addTemp(s, 'humil', 'Konya bozgunu', -12, 0.35); decide(s, 'Mehmed Ali\'ye karşı savaştın ve kaybettin'); chron(s, 'Konya bozgunu: Suriye Mısır\'ın, Mehmed Ali fiilen bağımsız.'); return { title: 'Konya bozgunu', good: false, battle: b };
+          }),
+          opt('gb', 'İngiltere\'yi çağır', gbOk ? 'İngiliz filosu Mısır\'ı geri çekilmeye zorlar. Bedeli: gümrük tavanı antlaşması' + (s.treaty ? ' (zaten var)' : '') + ', İngiltere\'ye borçlu hissedersin (bağımlılık).' : null, function () {
+            s.egyptCrisis = true; if (!s.treaty) s.treaty = true; s.concessions.push('balta'); s.egypt.loyalty = 40; s.egypt.men -= 10; decide(s, 'Mısır krizinde İngiltere\'yi çağırdın'); chron(s, 'İngiliz filosu İskenderiye önünde; Mısır geri çekildi. Gümrük tavanı kalıcı.'); return { title: 'İngiliz arabuluculuğu', good: true, text: 'Suriye kaldı. Karşılığında İngiliz tüccarlarına imtiyazlar verildi (bağımlılık +12) ve gümrük tavanı kalıcı oldu.' };
+          }, gbOk ? null : 'İngiltere en az 55 ya da İngiliz garantisi gerekli'),
+          opt('ru', 'Rusya\'dan yardım iste', ruOk ? 'Rus kolordusu Boğaz\'a çıkar; Mısır çekilir. Bedeli: Rus himayesi (bağımlılık +12), İngiltere −15.' : null, function () {
+            s.egyptCrisis = true; s.ruProtect = true; s.rel.GB -= 15; s.tension = 10; s.egypt.loyalty = 40; decide(s, 'Mısır krizinde Rusya\'dan yardım istedin'); chron(s, 'Hünkâr İskelesi: Rus himayesi.'); return { title: 'Hünkâr İskelesi', good: null, text: 'Rus askerleri Beykoz\'a çıktı; Mehmed Ali geri adım attı. Artık Rus himayesindesin.' };
+          }, ruOk ? null : 'Rus gerginliği 45\'in altında olmalı'),
+          opt('concede', 'Suriye\'yi ver', 'Suriye geliri (9) ve Mısır haracı gider; istikrar −10; reform gücü −2.', function () {
+            s.egyptCrisis = true; loseRegion(s, 'Suriye', 'Mısır'); s.egypt.syria = true; s.egypt.independent = true; addTemp(s, 'humil', 'Suriye\'nin kaybı', -10, 0.35); s.rp = Math.max(0, s.rp - 2); decide(s, 'Suriye\'yi Mehmed Ali\'ye verdin'); chron(s, 'Kütahya: Suriye Mısır\'ın.'); return { title: 'Kütahya Antlaşması', good: false, text: 'Suriye Mehmed Ali\'ye geçti.' };
+          })] };
+    }
+    if (id === 'harvest') {
+      var mult = 0.85 + 0.05 * s.inst.zi.lvl;
+      return { id: id, title: 'Kıtlık', place: 'Anadolu, ' + y, text: 'Kuraklık hasadı vurdu. Bu yıl toprak vergisi ×' + String(r2(mult)).replace('.', ',') + (s.inst.zi.lvl ? ' (Ziraat ıslahı kaybı azaltıyor)' : '') + '.', opts: [
+        opt('buy', 'Hububat al (6)', 'Kıtlığın istikrara etkisi −2\'de kalır.', function () { s.harvest = mult; s.treasury -= 6; addTemp(s, 'fam', 'Kıtlık', -2, 0.6); decide(s, 'Kıtlıkta hububat aldın'); return { title: 'Ambarlar açıldı', good: true, text: 'Halk doydu.' }; }, s.treasury < 6 ? 'Hazine yetmiyor' : null),
+        opt('none', 'Bir şey yapma', 'İstikrar −6.', function () { s.harvest = mult; addTemp(s, 'fam', 'Kıtlık', -6, 0.6); decide(s, 'Kıtlıkta bir şey yapmadın'); return { title: 'Kıtlık', good: false, text: 'Taşrada huzursuzluk.' }; })] };
+    }
+    if (id === 'jan_unrest') return { id: id, title: 'Yeniçeriler kazan kaldırdı', place: 'Et Meydanı, ' + y, text: 'Nizam askerinin büyümesi (' + s.nizam + ' bin) Ocak\'ı kızdırdı. Kazanlar devrilmek üzere.', opts: [
+      opt('pay', 'Bahşiş dağıt (8)', 'Sakinleşirler.', function () { s.treasury -= 8; decide(s, 'Yeniçerilere bahşiş dağıttın'); return { title: 'Kazanlar indirildi', good: true, text: 'Şimdilik sakinler.' }; }, s.treasury < 8 ? 'Hazine yetmiyor' : null),
+      opt('stand', 'Diren', 'İstikrar −10; reform gücü −2.', function () { addTemp(s, 'janriot', 'Yeniçeri huzursuzluğu', -10, 0.5); s.rp = Math.max(0, s.rp - 2); decide(s, 'Yeniçerilerin kazan kaldırmasına direndin'); return { title: 'Gergin bir yaz', good: null, text: 'İstanbul huzursuz.' }; })] };
+    if (id === 'izmir_offer') return { id: id, title: 'İzmir limanı imtiyazı', place: 'İzmir, ' + y, text: 'Bir İngiliz şirketi İzmir\'e modern rıhtım ve depolar kurmayı öneriyor; karşılığında gelirin %40\'ını ve 40 yıllık işletme hakkını istiyor.', opts: [
+      opt('yes', 'İmtiyazı ver', 'Gelir +3,6 / yıl hemen; Suriye ikmali +0,05; Tüccar +2; bağımlılık +12.', function () { s.offers.izmir = true; s.concessions.push('izmir'); s.rel.GB += 5; decide(s, 'İzmir limanı imtiyazını İngilizlere verdin'); chron(s, 'İzmir limanı imtiyazı verildi.'); return { title: 'İmtiyaz verildi', good: null, text: 'Rıhtım bir yılda bitti.' }; }),
+      opt('no', 'Reddet', 'Bir şey değişmez.', function () { s.offers.izmir = true; decide(s, 'İzmir limanı imtiyazını reddettin'); return { title: 'Ret', good: null, text: 'Şirket Selanik\'e bakıyor.' }; })] };
+    if (id === 'creditors') return { id: id, title: 'Alacaklılar kapıda', place: 'Londra, ' + y, text: 'Dış borcun ' + Math.round(s.F) + '. Londra bankerleri yeni şartlar istiyor.', opts: [
+      opt('treaty', 'Gümrük tavanını kabul et', 'Gümrük 12 → 5; bağımlılık +15.', function () { s.treaty = true; decide(s, 'Alacaklılara gümrük tavanını kabul ettin'); return { title: 'Ticaret antlaşması', good: null, text: 'Gümrük %5\'e indi.' }; }, s.treaty ? 'Antlaşma zaten var' : null),
+      opt('mine', 'Ergani madenini imtiyaza ver', 'Bağımlılık +12.', function () { s.concessions.push('ergani'); decide(s, 'Ergani madenini alacaklılara imtiyaz olarak verdin'); return { title: 'Maden imtiyazı', good: null, text: 'Bakır gelirleri yabancı şirketin.' }; }),
+      opt('rate', 'Faizi artırmalarına razı ol', 'Dış borç faizi kalıcı +1,5 puan.', function () { s.rateExtra += 1.5; decide(s, 'Alacaklılara daha yüksek faizi kabul ettin'); return { title: 'Faiz arttı', good: false, text: 'Borç daha pahalı.' }; })] };
+    return null;
+  }
+  function egyptVsRebels(s) { var E = s.egypt, q = E.equip * E.train * E.cmd * 0.95 * 1.05, p = E.men * 0.5 * q, rb = enemySide(s, 'rebels'), pr = power(rb).p, k = Math.pow(p / pr, 2.5); return clamp(k / (1 + k), 0.05, 0.95); }
+
+  // ---------- the year's end ----------
+  function endYear(s) {
+    var R = [], y = s.year;
+    function line(t, kind) { R.push({ t: t, k: kind || '' }); }
+    var stab0 = stability(s);
+    // research
+    var rb = researchBreak(s).total;
+    if (s.focus) {
+      s.prog[s.focus] = (s.prog[s.focus] || 0) + rb;
+      var T = TECHS[s.focus];
+      if (s.prog[s.focus] >= T.cost) { s.known[s.focus] = y; line('Bilgi edinildi: ' + T.n + ' (dünyada ' + T.world + ', sende ' + y + '). ' + T.eff + '.', 'good'); chron(s, T.n + ' öğrenildi.'); s.focus = null; }
+      else line('Araştırma: ' + T.n + ' ' + r1(s.prog[s.focus]) + ' / ' + T.cost + ' (yılda ' + r1(rb) + ').');
+    } else line('Araştırma konusu seçilmedi: bu yılın ' + r1(rb) + ' puanı boşa gitti.', 'bad');
+    // institutions
+    for (var k in s.inst) { var st = s.inst[k]; if (st.pend) { st.pend.yrs--; if (st.pend.yrs <= 0) { st.lvl = st.pend.to; st.pend = null; line(INST[k].n + ' ' + st.lvl + '. seviyeye oturdu.', 'good'); } } }
+    // projects
+    for (var p in s.projects) { var pr = s.projects[p]; if (pr !== 'done') { pr.yrs--; if (pr.yrs <= 0) { s.projects[p] = 'done'; line(PROJ[p].n + ' tamamlandı. ' + PROJ[p].desc, 'good'); chron(s, PROJ[p].n + ' açıldı.'); } } }
+    // laws taking effect
+    for (var lw in s.laws) { var L2 = s.laws[lw]; if (L2.wait > 0) { L2.wait--; if (L2.wait === 0) { if (lw === 'vergi') { s.eff = r2(s.eff + 0.15); line('Merkezî vergi yerleşti: vergi verimi ' + String(s.eff).replace('.', ',') + '.', 'good'); } if (lw === 'tanzimat') { s.eff = r2(s.eff + 0.05); line('Tanzimat yerleşti: vergi verimi ' + String(s.eff).replace('.', ',') + '.', 'good'); } } } else if (L2.wait === 0 && L2.year === y && lw === 'redif') line('Redif teşkilatı kuruldu: Nizam maliyeti 0,38 / bin.', 'good'); }
+    // army
+    var cap = s.laws.redif ? 18 : 10, n0 = s.nizam;
+    if (s.nizamTarget > s.nizam) s.nizam = Math.min(s.nizamTarget, s.nizam + cap); else if (s.nizamTarget < s.nizam) s.nizam = s.nizamTarget;
+    if (s.nizam !== n0) line('Nizam ordusu ' + n0 + ' → ' + s.nizam + ' bin' + (s.nizam < s.nizamTarget ? ' (yılda en fazla ' + cap + ' bin toplanabiliyor)' : '') + '.');
+    if (built(s, 'tufekhane')) { s.rifles += 6; }
+    if (s.pendingImport) { s.rifles += s.pendingImport; s.imported += s.pendingImport; line('Belçika tüfekleri geldi: +' + s.pendingImport + ' bin.'); s.pendingImport = 0; }
+    // growth of the economy: the slow harvest of peace, farming and roads
+    var gr = 0.002 + 0.002 * instEff(s, 'zi') + (built(s, 'sose') ? 0.001 : 0) + (built(s, 'ciftlik') ? 0.001 : 0) + (stab0 >= 50 ? 0.002 : 0) - (s.temp.some(function (t) { return t.id === 'wear'; }) ? 0.004 : 0);
+    s.growth = r2((s.growth || 1) * (1 + gr) * 1000) / 1000;
+    // money
+    var inc = incomeBreak(s, s.harvest), exp = expenseBreak(s);
+    var net = inc.total - exp.total;
+    s.treasury += net; s.harvest = null;
+    line('Gelir ' + r1(inc.total) + ', gider ' + r1(exp.total) + ': hazine ' + (net >= 0 ? '+' : '') + r1(net) + '.', net >= 0 ? '' : 'bad');
+    if (s.treasury < 0) {
+      var need = -s.treasury, can = Math.max(0, 40 - s.D), take = Math.min(need, can);
+      if (take > 0) { s.D += take; s.treasury += take; line('Hazine açığı Galata bankerlerinden kapatıldı: iç borç +' + r1(take) + '.', 'bad'); }
+      if (s.treasury < -15 && !s.bankrupt) {
+        s.bankrupt = true; s.F = Math.round(s.F * 0.5); s.treasury = 0; addTemp(s, 'bank', 'İflas', -12, 0.3);
+        line('İFLAS: devlet borcunu ödeyemedi. Gümrük ve dolaylı vergilerin yarısı alacaklıların idaresine geçti.', 'bad'); chron(s, 'İflas: alacaklılar idaresi kuruldu.');
+      } else if (s.treasury < -15 && s.bankrupt) {
+        var cut = Math.round(s.nizam * 0.25 / 5) * 5; s.nizam -= cut; s.nizamTarget = Math.min(s.nizamTarget, s.nizam); s.treasury = -15; addTemp(s, 'unpaid', 'Ödenmeyen maaşlar', -8, 0.4);
+        line('Maaşlar ödenemedi: ' + cut + ' bin Nizam askeri terhis edildi; hazine açığı −15\'te donduruldu.', 'bad');
+      }
+    }
+    // temp decay
+    s.temp.forEach(function (t) { t.v = t.v * (1 - t.decay); }); s.temp = s.temp.filter(function (t) { return Math.abs(t.v) >= 0.5; });
+    // reform power
+    var g = rpGainBreak(s).total; s.rp = Math.min(15, s.rp + g);
+    // relations drift
+    ['GB', 'FR'].forEach(function (c) { s.rel[c] += (45 - s.rel[c]) * 0.08; s.rel[c] = clamp(s.rel[c], 0, 100); });
+    // rivals (same yardstick every year; their choices are reported)
+    var notes = [];
+    s.russia.men = Math.min(72, s.russia.men + 0.5); s.russia.equip = Math.min(1.18, s.russia.equip + 0.0065); s.russia.train = Math.min(1.12, s.russia.train + 0.003);
+    {
+      var E = s.egypt;
+      if (y >= 1818) { E.train = Math.min(1.3, E.train + 0.025); E.equip = Math.min(1.22, E.equip + 0.02); E.men = Math.min(65, E.men + 3); }
+      if (y === 1818) notes.push('Mehmed Ali Fransız subay Sève ile yeni bir ordu kuruyor.');
+      if (y === 1822) notes.push('Mısır\'da kura ile asker toplanıyor; Bulak\'ta tüfek fabrikası açıldı.');
+      var fe = forecast(s, 'syria', 'egypt');
+      if (!E.independent) { if (fe.ratio < 1.3) E.loyalty -= 3; else E.loyalty += 1; if (E.crete && y >= 1825) E.loyalty -= 2; E.loyalty = clamp(E.loyalty, 0, 100); }
+    }
+    // tension
+    var t0 = s.tension;
+    if (s.greek === 'active') s.tension += 4;
+    if (s.serbia === 'ottoman') s.tension += 1;
+    var fb = forecast(s, 'balkan', 'russia'); if (fb.ratio < 0.6) s.tension += 3;
+    if (s.guarantee) s.tension -= 2;
+    s.tension = clamp(s.tension, 0, 100);
+    if (Math.round(s.tension) !== Math.round(t0)) line('Rus gerginliği ' + Math.round(t0) + ' → ' + Math.round(s.tension) + (fb.ratio < 0.6 ? ' (Balkan\'da zayıf görünüyorsun)' : '') + '.', s.tension > t0 ? 'bad' : '');
+    notes.forEach(function (n) { line(n, 'rival'); });
+    var stab1 = stability(s);
+    if (stab1 !== stab0) line('İstikrar ' + stab0 + ' → ' + stab1 + '.', stab1 < stab0 ? 'bad' : 'good');
+    snapshot(s);
+    // collapse
+    if (stab1 < 15 && draw(s, 'coup') < (15 - stab1) / 12) { s.over = true; s.endReason = 'coup'; line('DARBE: istikrar çöktü, padişah tahttan indirildi.', 'bad'); }
+    else if (stab1 < 15) line('Sarayda darbe fısıltıları: istikrar ' + stab1 + ' (darbe riski %' + Math.round((15 - stab1) / 12 * 100) + ').', 'bad');
+    s.dipDone = false; s.favorDone = false;
+    s.year++;
+    if (s.year > END) { s.over = true; s.endReason = s.endReason || 'time'; }
+    if (s.pendingWar && !s.over) { s.pendingWar = false; s.events = ['russia_continue']; } else s.events = s.over ? [] : genEvents(s);
+    return R;
+  }
+
+  function snapshot(s) {
+    var fb = forecast(s, 'balkan', 'russia'), fe = forecast(s, 'syria', 'egypt');
+    var gaps = [];
+    for (var t in TECHS) { var T = TECHS[t]; if (s.year > T.world) gaps.push((s.known[t] || s.year) - T.world); }
+    var avgGap = gaps.length ? gaps.reduce(function (a, b) { return a + b; }, 0) / gaps.length : 0;
+    s.history.push({ y: s.year, treasury: r1(s.treasury), debt: r1(s.D + s.F), stab: stability(s), pb: r1(fb.pa.p), pr: r1(fb.pb.p), ps: r1(fe.pa.p), pe: r1(fe.pb.p),
+      techs: Object.keys(s.known).length, gap: r1(avgGap), dep: dependenceBreak(s).total, income: r1(incomeBreak(s).total) });
+  }
+
+  function verdict(s) {
+    var fb = forecast(s, 'balkan', 'russia'), fe = forecast(s, 'syria', 'egypt'), dep = dependenceBreak(s).total;
+    var regions = 0, kept = 0; for (var r in REGIONS) { regions++; if (regionOn(s, r)) kept++; }
+    var ind = (built(s, 'feshane') ? 1 : 0) + (built(s, 'tufekhane') ? 1 : 0) + (built(s, 'tophane') ? 1 : 0) + (built(s, 'tersane') ? 1 : 0) + s.inst.si.lvl;
+    var areas = [
+      { n: 'Güç', v: clamp(Math.round(fb.ratio * 60), 0, 100), why: 'Balkan\'da Rusya\'ya karşı güç oranı ' + String(r2(fb.ratio)).replace('.', ',') },
+      { n: 'Sanayi', v: clamp(ind * 14, 0, 100), why: 'atölye ve fabrikalar, sanayi teşviki' },
+      { n: 'Bilim ve eğitim', v: clamp(Object.keys(s.known).length * 7 + s.inst.mt.lvl * 6, 0, 100), why: Object.keys(s.known).length + ' bilgi, Maarif ' + s.inst.mt.lvl },
+      { n: 'Refah', v: clamp(Math.round(incomeBreak(s).total - 40), 0, 100), why: 'yıllık gelir ' + r1(incomeBreak(s).total) },
+      { n: 'Toprak', v: Math.round(100 * kept / regions), why: kept + ' / ' + regions + ' eyalet grubu elinde' },
+      { n: 'Devlet kapasitesi', v: clamp(Math.round(stability(s) * 0.6 + (s.eff - 0.5) * 120), 0, 100), why: 'istikrar ' + stability(s) + ', vergi verimi ' + String(r2(s.eff)).replace('.', ',') },
+      { n: 'Egemenlik', v: clamp(100 - dep - Math.round((s.D + s.F) / 3), 0, 100), why: 'bağımlılık ' + dep + ', borç ' + Math.round(s.D + s.F) }
+    ];
+    var title;
+    if (s.endReason === 'coup') title = 'Tahttan indirilen padişah';
+    else if (fb.ratio >= 1.2 && fe.ratio >= 1.1 && dep < 30) title = "Doğu'nun Prusyası";
+    else if (s.bankrupt || dep >= 50) title = 'Borçlu imparatorluk';
+    else if (s.egypt.independent && fe.ratio < 0.8) title = "Mısır'ın gölgesinde";
+    else if (s.ocak) title = 'Yeniçerilerin esiri';
+    else if (kept <= regions - 3) title = 'Dağılan imparatorluk';
+    else if (fb.ratio >= 0.9) title = 'Hasta adam ayağa kalktı';
+    else title = 'Yarım kalmış ıslahat';
+    return { title: title, areas: areas };
+  }
+
+  return { START: START, END: END, TECHS: TECHS, INST: INST, PROJ: PROJ, LAWS: LAWS, DIP: DIP, REGIONS: REGIONS, REGION_NAMES: REGION_NAMES,
+    newGame: newGame, A: A, eventCard: eventCard, endYear: endYear, stabilityBreak: stabilityBreak, stability: stability, incomeBreak: incomeBreak,
+    expenseBreak: expenseBreak, FAVOR: FAVOR, rpGainBreak: rpGainBreak, researchBreak: researchBreak, dependenceBreak: dependenceBreak, forecast: forecast,
+    capacity: capacity, building: building, coupRisk: function (s) { var st = stability(s); return st < 15 ? Math.min(1, (15 - st) / 12) : 0; }, foreignRate: foreignRate, verdict: verdict, egyptVsRebels: egyptVsRebels, nizamCost: nizamCost };
+})();
+// ==MODEL END==
+
+</script>
+<script>
+// ==UI START==
+(function () {
+  'use strict';
+  var KEY = 'p1815-s6-v1';
+  var s = null, ui = { view: 'intro', tab: 'butce', queue: [], card: null, result: null, report: null, why: null, name: '', nizamStart: 0, sent: null, decade: null };
+  var app = document.getElementById('app');
+
+  // ---------- small helpers ----------
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function fmt(v, d) { d = d == null ? 0 : d; var x = Number(v); if (!isFinite(x)) return '–'; var str = Math.abs(x).toFixed(d).replace('.', ','); return (x < 0 ? '−' : '') + str; }
+  function sg(v, d) { return (v > 0 ? '+' : '') + fmt(v, d); }
+  function pct(v) { return '%' + Math.round(v * 100); }
+  function btn(act, label, opts) { opts = opts || {}; return '<button class="' + (opts.cls || 'btn') + '" data-act="' + esc(act) + '"' + (opts.arg != null ? ' data-arg="' + esc(opts.arg) + '"' : '') + (opts.disabled ? ' disabled' : '') + '>' + label + '</button>'; }
+  function why(t) { return t ? '<span class="why">' + esc(t) + '</span>' : ''; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify({ s: s, name: ui.name })); } catch (e) { } }
+  function load() { try { var o = JSON.parse(localStorage.getItem(KEY) || 'null'); return o; } catch (e) { return null; } }
+  function clearSave() { try { localStorage.removeItem(KEY); } catch (e) { } }
+
+  // ---------- header ----------
+  function header() {
+    var st = M.stabilityBreak(s), dep = M.dependenceBreak(s).total, inc = M.incomeBreak(s).total, exp = M.expenseBreak(s).total, net = inc - exp;
+    var risk = M.coupRisk(s);
+    function chip(id, label, val, sub, tone) { return '<button class="chip ' + (tone || '') + '" data-act="why" data-arg="' + id + '"><span class="chip-l">' + label + '</span><span class="chip-v">' + val + '</span><span class="chip-s">' + sub + '</span></button>'; }
+    return '<header class="top"><div class="brand"><span class="mark">Proje 1815</span><span class="sub">Kâğıt döngü · deneme</span></div>' +
+      '<div class="year"><span class="y">' + s.year + '</span><span class="ys">' + (M.END - s.year + 1) + ' yıl kaldı</span></div>' +
+      '<div class="chips">' +
+      chip('hazine', 'Hazine', fmt(s.treasury, 0), 'yılda ' + sg(net, 0), s.treasury < 0 ? 'bad' : '') +
+      chip('borc', 'Borç', fmt(s.D + s.F, 0), 'faiz ' + fmt(s.D * 0.08 + s.F * M.foreignRate(s) / 100, 1), (s.D + s.F) > 60 ? 'warn' : '') +
+      chip('istikrar', 'İstikrar', st.total, risk ? 'darbe riski ' + pct(risk) : (st.total < 30 ? 'tehlikeli' : 'Neden?'), risk ? 'bad' : (st.total < 35 ? 'warn' : '')) +
+      chip('reform', 'Reform gücü', fmt(s.rp, 0), 'yılda +' + fmt(M.rpGainBreak(s).total, 0)) +
+      chip('bagimlilik', 'Bağımlılık', dep, dep >= 50 ? 'yüksek' : 'Neden?', dep >= 50 ? 'warn' : '') +
+      '</div></header>';
+  }
+
+  // ---------- tabs ----------
+  var TABS = [['butce', 'Bütçe ve borç'], ['proje', 'Projeler'], ['bilim', 'Teknoloji'], ['reform', 'Reform'], ['diplomasi', 'Diplomasi'], ['ordu', 'Ordu']];
+  function tabs() {
+    return '<nav class="tabs" role="tablist">' + TABS.map(function (t) { return '<button role="tab" class="tab' + (ui.tab === t[0] ? ' on' : '') + '" data-act="tab" data-arg="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</nav>';
+  }
+  function table(lines, unit) {
+    return '<table class="t">' + lines.map(function (l) { return '<tr><td>' + esc(l.n) + why(l.why) + '</td><td class="num">' + fmt(l.v, Math.abs(l.v) < 10 && l.v % 1 ? 1 : 0) + (unit || '') + '</td></tr>'; }).join('') + '</table>';
+  }
+  function seg(act, cur, items) { return '<div class="seg">' + items.map(function (it) { return '<button class="' + (cur === it[0] ? 'on' : '') + '" data-act="' + act + '" data-arg="' + it[0] + '"' + (it[2] ? ' disabled' : '') + '>' + it[1] + '</button>'; }).join('') + '</div>'; }
+
+  function tabButce() {
+    var inc = M.incomeBreak(s), exp = M.expenseBreak(s), wF = M.A.borrowFCheck(s);
+    return '<section class="pane"><h2>Bütçe ve borç</h2><p class="lead">Her yıl sonunda gelir eklenir, gider düşülür. Açık önce Galata bankerlerinden kapatılır; iç borç 40\'ı geçerse ve hazine −15\'in altına inerse devlet iflas eder.</p>' +
+      '<div class="row2"><div><h3>Vergi düzeyi</h3>' + seg('tax', String(s.tax), [['0', 'Düşük'], ['1', 'Olağan'], ['2', 'Yüksek']]) +
+      '<p class="note">Düşük: toprak vergisi ×0,85, Ayanlar +4, Tüccar +2. Yüksek: ×1,2, Ayanlar −6, Tüccar −4.</p></div>' +
+      '<div><h3>Gümrük</h3>' + seg('trade', s.treaty ? 'treaty' : s.trade, [['protect', 'Korumacılık', s.treaty], ['free', 'Serbest ticaret', s.treaty]]) +
+      '<p class="note">' + (s.treaty ? 'Ticaret antlaşması: gümrük %5 tavanında; seçim yok.' : 'Serbest ticaret: gümrük 12 → 7, ithal tüfek ucuzlar, Feshane geliri ×0,6, esnaf kızar.') + '</p></div></div>' +
+      '<h3>Borç</h3><div class="actions">' +
+      btn('borrowD', 'Galata bankerlerinden 15 al <small>faiz %8 · tavan 40 · şu an ' + fmt(s.D) + '</small>', { disabled: s.D >= 40 }) +
+      btn('borrowF', 'Londra\'dan 30 dış borç <small>' + (wF ? esc(wF) : 'faiz %' + fmt(M.foreignRate(s), 1) + ' · bağımlılık artar') + '</small>', { disabled: !!wF }) +
+      btn('repay', '10 borç öde <small>önce dış borç</small>', { disabled: s.treasury < 10 || s.D + s.F <= 0 }) + '</div>' +
+      '<div class="row2"><div><h3>Gelir · ' + fmt(inc.total, 1) + '</h3>' + table(inc.lines) + '</div><div><h3>Gider · ' + fmt(exp.total, 1) + '</h3>' + table(exp.lines) + '</div></div>' +
+      '<p class="note">Para birimi: milyon kuruş. Bu yıl beklenen net: <b>' + sg(inc.total - exp.total, 1) + '</b>. İnşaat ve satın almalar hemen, gelir ve gider yıl sonunda işler.</p></section>';
+  }
+  function tabProje() {
+    var cap = M.capacity(s), used = M.building(s);
+    var out = '<section class="pane"><h2>Projeler</h2><p class="lead">İnşaat kapasitesi aynı anda kaç projenin yürüyeceğini belirler: <b>' + used + ' / ' + cap + '</b>. Bedel hemen ödenir, bakım tamamlanınca başlar.</p><div class="cards">';
+    Object.keys(M.PROJ).forEach(function (id) {
+      var P = M.PROJ[id], st = s.projects[id], w = M.A.projectCheck(s, id);
+      var state = st === 'done' ? '<span class="pill good">Tamamlandı</span>' : (st ? '<span class="pill">Yapılıyor · ' + st.yrs + ' yıl</span>' : '');
+      out += '<article class="card' + (st === 'done' ? ' done' : '') + '"><h4>' + esc(P.n) + ' ' + state + '</h4><p>' + esc(P.desc) + '</p>' +
+        '<div class="meta">Bedel ' + P.cost + ' · ' + P.yrs + ' yıl · bakım ' + P.up + ' / yıl</div>' +
+        (st ? '' : btn('project', 'Başlat', { arg: id, disabled: !!w })) + (st ? '' : why(w)) + '</article>';
+    });
+    return out + '</div></section>';
+  }
+  function tabBilim() {
+    var rb = M.researchBreak(s), out = '<section class="pane"><h2>Teknoloji</h2><p class="lead">Araştırma yılda <b>' + fmt(rb.total, 1) + '</b> puan. Bir konu seç; bilgi, kurumların üst seviyelerini, yasaları ve yeni yapıları açar. Konusu seçilmemiş yılın puanı boşa gider.</p>' + table(rb.lines) + '<div class="techs">';
+    var areas = ['Askerî', 'Sanayi', 'Tarım', 'Devlet', 'Maarif'];
+    areas.forEach(function (a) {
+      out += '<div class="tcol"><h3>' + a + '</h3>';
+      Object.keys(M.TECHS).forEach(function (id) {
+        var T = M.TECHS[id]; if (T.area !== a) return;
+        var known = s.known[id], prog = s.prog[id] || 0, locked = T.req && !s.known[T.req], on = s.focus === id;
+        var gap = known ? (known - T.world) : (s.year > T.world ? s.year - T.world : 0);
+        out += '<button class="tech' + (known ? ' known' : '') + (on ? ' on' : '') + '" data-act="focus" data-arg="' + id + '"' + (known || locked ? ' disabled' : '') + '>' +
+          '<span class="tn">' + esc(T.n) + '</span><span class="te">' + esc(T.eff) + '</span>' +
+          '<span class="tm">' + (known ? 'Öğrenildi ' + known + (gap > 0 ? ' · dünyadan ' + gap + ' yıl geç' : '') : (locked ? 'Önce: ' + esc(M.TECHS[T.req].n) : fmt(prog, 1) + ' / ' + T.cost + ' puan' + (gap > 0 ? ' · Avrupa\'da ' + T.world + '\'den beri' : ''))) + '</span>' +
+          (!known && !locked ? '<span class="bar"><i style="width:' + Math.min(100, 100 * prog / T.cost) + '%"></i></span>' : '') + '</button>';
+      });
+      out += '</div>';
+    });
+    out += '</div><h3>Transfer: hızın bedeli bağımlılık</h3><div class="actions">';
+    var wf = M.A.advisorCheck(s, 'fr'), wg = M.A.advisorCheck(s, 'gb');
+    out += btn('advisor', (s.adv.fr ? 'Fransız subay heyetini gönder' : 'Fransız subay heyeti getir') + ' <small>5 / yıl · askerî araştırma +3, komuta +0,06 · bağımlılık +4 · Yeniçeriler −3, Ulema −2' + (wf ? ' · ' + esc(wf) : '') + '</small>', { arg: 'fr', disabled: !!wf });
+    out += btn('advisor', (s.adv.gb ? 'İngiliz mühendisleri gönder' : 'İngiliz mühendis getir') + ' <small>6 / yıl · sanayi araştırması +3 · bağımlılık +4' + (wg ? ' · ' + esc(wg) : '') + '</small>', { arg: 'gb', disabled: !!wg });
+    out += btn('import', 'Belçika\'dan 20 bin tüfek ısmarla <small>' + M.A.importCost(s) + ' · yıl sonunda gelir · silahta dış tedarik bağımlılığı' + (s.pendingImport ? ' · bu yıl ısmarlandı' : '') + '</small>', { disabled: !!s.pendingImport || s.treasury < M.A.importCost(s) });
+    return out + '</div></section>';
+  }
+  function pips(lvl, to) { var o = ''; for (var i = 1; i <= 3; i++) o += '<i class="' + (i <= lvl ? 'on' : (to && i <= to ? 'pend' : '')) + '"></i>'; return '<span class="pips">' + o + '</span>'; }
+  function tabReform() {
+    var rg = M.rpGainBreak(s), out = '<section class="pane"><h2>Reform sekmesi</h2><p class="lead">Reform gücü <b>' + fmt(s.rp) + '</b> (yılda +' + fmt(rg.total) + ', en çok 15). Bir kurumun seviyesini yükseltmek bir kez reform gücü, kalıcı bakım ve ilgili çıkar grubunun tepkisini ister; yeni seviye iki yılda oturur.</p><h3>Kurumlar</h3><div class="cards">';
+    Object.keys(M.INST).forEach(function (id) {
+      var I = M.INST[id], st = s.inst[id], to = st.lvl + 1, w = M.A.instCheck(s, id);
+      out += '<article class="card"><h4>' + esc(I.n) + ' ' + pips(st.lvl, st.pend && st.pend.to) + '</h4><p>' + esc(I.what) + '</p><p class="who">' + esc(I.who) + '</p>' +
+        (st.pend ? '<div class="meta">' + st.pend.to + '. seviye oturuyor · ' + st.pend.yrs + ' yıl</div>' : (to <= 3 ? '<div class="meta">' + to + '. seviye: reform gücü ' + I.rp[to] + ' · bakım ' + I.up[to] + ' / yıl' + (I.req[to] ? ' · bilgi: ' + esc(M.TECHS[I.req[to]].n) : '') + '</div>' : '<div class="meta">En üst seviye</div>')) +
+        '<div class="actions tight">' + (to <= 3 && !st.pend ? btn('raise', 'Yükselt', { arg: id, disabled: !!w }) : '') + (st.lvl > 0 && !st.pend ? btn('lower', 'Düşür', { arg: id, cls: 'btn ghost' }) : '') + '</div>' + why(w) + '</article>';
+    });
+    out += '</div><h3>Yasalar</h3><div class="cards">';
+    Object.keys(M.LAWS).forEach(function (id) {
+      var Lw = M.LAWS[id], w = M.A.lawCheck(s, id), done = !!s.laws[id] || (id === 'ocak' && !s.ocak);
+      var extra = '';
+      if (id === 'ocak' && s.ocak) {
+        var ch = M.A.ocakChance(s);
+        extra = '<div class="odds"><b>Başarı ihtimali ' + pct(ch.p) + '</b>' + ch.lines.map(function (l) { return '<span>' + esc(l.n) + ' ' + (l.v >= 0 ? '+' : '−') + Math.abs(Math.round(l.v * 100)) + '</span>'; }).join('') + '</div>';
+      }
+      out += '<article class="card law' + (done ? ' done' : '') + '"><h4>' + esc(Lw.n) + (done ? ' <span class="pill good">Uygulandı</span>' : '') + '</h4><p class="subt">' + esc(Lw.sub) + '</p><p>' + esc(Lw.desc) + '</p>' + extra +
+        (done ? '' : '<div class="meta">Reform gücü ' + Lw.rp + (Lw.req ? ' · bilgi: ' + esc(M.TECHS[Lw.req].n) : '') + '</div>' + btn('law', 'Uygula', { arg: id, disabled: !!w }) + why(w)) + '</article>';
+    });
+    out += '</div><h3>İhsan <small>yılda bir · 6</small></h3><p class="note">Bir gruba geçici gönül almak: istikrar +5, her yıl azalarak.</p><div class="actions">';
+    Object.keys(M.FAVOR).forEach(function (a) { var w = M.A.favorCheck(s, a); if (a === 'yen' && !s.ocak) return; out += btn('favor', esc(M.FAVOR[a]), { arg: a, disabled: !!w }); });
+    return out + '</div></section>';
+  }
+  function bar(v, max, mark, cls) { return '<span class="hbar ' + (cls || '') + '"><i style="width:' + Math.max(0, Math.min(100, 100 * v / max)) + '%"></i>' + (mark ? '<b style="left:' + (100 * mark / max) + '%"></b>' : '') + '</span>'; }
+  function tabDip() {
+    var thr = s.guarantee ? 85 : 70, out = '<section class="pane"><h2>Diplomasi ve hami</h2><p class="lead">Yılda bir elçilik.' + (s.dipDone ? ' <b>Bu yılki gönderildi.</b>' : '') + '</p><div class="rel">' +
+      '<div><span>İngiltere</span>' + bar(s.rel.GB, 100) + '<b>' + fmt(s.rel.GB) + '</b></div>' +
+      '<div><span>Fransa</span>' + bar(s.rel.FR, 100) + '<b>' + fmt(s.rel.FR) + '</b></div>' +
+      '<div><span>Rus gerginliği</span>' + bar(s.tension, 100, thr, 'ru') + '<b>' + fmt(s.tension) + '</b></div>' +
+      '<div><span>Mısır bağlılığı</span>' + bar(s.egypt.independent ? 0 : s.egypt.loyalty, 100, 35, 'eg') + '<b>' + (s.egypt.independent ? 'bağımsız' : fmt(s.egypt.loyalty)) + '</b></div></div>' +
+      '<p class="note">Rus gerginliği ' + thr + '\'e ulaşırsa ültimatom gelir. Mısır bağlılığı 35\'in altına inerse ya da Mısır Suriye\'de senden güçlü görünürse Mehmed Ali harekete geçer (1828\'den sonra).</p><div class="cards">';
+    Object.keys(M.DIP).forEach(function (id) {
+      var D = M.DIP[id], w = M.A.dipCheck(s, id);
+      out += '<article class="card"><h4>' + esc(D.n) + '</h4><p>' + esc(D.eff) + '</p><div class="meta">' + (D.cost ? 'Bedel ' + D.cost : 'Bedelsiz') + '</div>' + btn('dip', 'Gönder', { arg: id, disabled: !!w }) + why(w) + '</article>';
+    });
+    return out + '</div></section>';
+  }
+  function fcTable(fc) {
+    var rows = fc.us.f.map(function (x, i) { var y = fc.them.f[i], d = x.v / y.v; return '<tr class="' + (d < 0.9 ? 'lag' : (d > 1.1 ? 'lead' : '')) + '"><td>' + esc(x.k) + why(x.why) + '</td><td class="num">×' + fmt(x.v, 2) + '</td><td class="num">×' + fmt(y.v, 2) + '</td></tr>'; }).join('');
+    return '<table class="t fc"><thead><tr><th></th><th class="num">Biz</th><th class="num">' + esc(fc.them.n) + '</th></tr></thead><tr><td>Asker</td><td class="num">' + fmt(fc.us.men) + ' bin</td><td class="num">' + fmt(fc.them.men) + ' bin</td></tr>' + rows +
+      '<tr class="sum"><td>Güç</td><td class="num">' + fmt(fc.pa.p, 1) + '</td><td class="num">' + fmt(fc.pb.p, 1) + '</td></tr></table>';
+  }
+  function fcPill(fc) { return '<span class="pill ' + (fc.level === 'Yüksek' ? 'good' : (fc.level === 'Orta' ? 'warn' : 'bad')) + '">' + fc.level + ' · ' + pct(fc.lo) + '–' + pct(fc.hi) + '</span>'; }
+  function tabOrdu() {
+    var fb = M.forecast(s, 'balkan', 'russia'), fe = M.forecast(s, 'syria', 'egypt'), cap = s.laws.redif ? 18 : 10;
+    var out = '<section class="pane"><h2>Ordu hazırlığı</h2><div class="row2"><div><h3>Nizam-ı Cedid</h3>' +
+      '<div class="stepper">' + btn('nizam', '−5', { arg: -5, cls: 'btn sq' }) + '<span><b>' + s.nizamTarget + '</b> bin hedef<br><small>şu an ' + s.nizam + ' bin · yılda en çok ' + cap + ' bin toplanır</small></span>' + btn('nizam', '+5', { arg: 5, cls: 'btn sq' }) + '</div>' +
+      '<p class="note">Hedefte yıllık maliyet ' + fmt(s.nizamTarget * M.nizamCost(s), 1) + ' (' + fmt(M.nizamCost(s), 2) + ' / bin).' + (s.ocak ? ' Ocak varken her 5 bin Nizam Yeniçerileri −1 kızdırır.' : '') + '</p></div>' +
+      '<div><h3>Kuvvetler</h3><table class="t"><tr><td>Yeniçeriler' + why(s.ocak ? 'kâğıtta 60 bin, sahada yaklaşık 42 bin; talimsiz' : 'Ocak kaldırıldı') + '</td><td class="num">' + (s.ocak ? '60 bin' : '–') + '</td></tr>' +
+      '<tr><td>Nizam askeri</td><td class="num">' + s.nizam + ' bin</td></tr><tr><td>Modern tüfek stoku' + why((s.projects.tufekhane === 'done' ? 'Tüfekhane yılda +6 bin' : 'Tüfekhane yok') + (s.imported ? ' · ' + s.imported + ' bin ithal' : '')) + '</td><td class="num">' + fmt(s.rifles) + ' bin</td></tr></table></div></div>' +
+      '<h3>"Bugün savaşsaydık"</h3><div class="row2"><div class="fcbox"><h4>Balkan: Rusya\'ya karşı ' + fcPill(fb) + '</h4>' + fcTable(fb) + '<p class="note">En zayıf çarpanın: <b>' + esc(fb.weakest) + '</b>.</p></div>' +
+      '<div class="fcbox"><h4>Suriye: Mısır\'a karşı ' + fcPill(fe) + '</h4>' + fcTable(fe) + '<p class="note">En zayıf çarpanın: <b>' + esc(fe.weakest) + '</b>.</p></div></div>' +
+      '<p class="note">Kazanma ihtimali güç oranından gelir; aralık üçüncü tarafların tavrındaki belirsizliktir. Her muharebe tüfek stokunun dörtte birini tüketir.</p></section>';
+    return out;
+  }
+  function side() {
+    var fb = M.forecast(s, 'balkan', 'russia'), fe = M.forecast(s, 'syria', 'egypt'), worst = null;
+    Object.keys(M.TECHS).forEach(function (id) { var T = M.TECHS[id]; if (!s.known[id] && s.year > T.world) { var g = s.year - T.world; if (!worst || g > worst.g) worst = { g: g, n: T.n, w: T.world }; } });
+    var mil = M.TECHS.kapsul, kg = s.known.kapsul ? (s.known.kapsul - mil.world) : (s.year > mil.world ? s.year - mil.world : null);
+    function vs(label, fc, cls) { var tot = fc.pa.p + fc.pb.p; return '<div class="vs"><div class="vs-h"><span>' + label + '</span>' + fcPill(fc) + '</div><div class="vs-bar ' + cls + '"><i style="width:' + (100 * fc.pa.p / tot) + '%"></i></div><div class="vs-n"><span>Biz ' + fmt(fc.pa.p) + '</span><span>' + esc(fc.them.n) + ' ' + fmt(fc.pb.p) + '</span></div></div>'; }
+    var chron = s.chron.slice(-6).reverse().map(function (c) { return '<li><b>' + c.y + '</b> ' + esc(c.t) + '</li>'; }).join('');
+    return '<aside class="side"><section class="fark"><h2>Fark</h2>' + vs('Balkan · Rusya', fb, 'ru') + vs('Suriye · Mısır', fe, 'eg') +
+      '<p class="gap">' + (kg != null ? (s.known.kapsul ? 'Kapsüllü tüfeği dünyadan ' + kg + ' yıl geç öğrendin.' : 'Tüfekte Avrupa\'nın ' + kg + ' yıl gerisindesin.') : 'Avrupa kapsüllü tüfeği deniyor (yaygınlaşma 1825).') + '</p>' +
+      (worst ? '<p class="gap">En büyük gecikme: ' + esc(worst.n) + ' (dünyada ' + worst.w + ', ' + worst.g + ' yıl)</p>' : '') +
+      '<p class="gap">Rus gerginliği ' + fmt(s.tension) + ' / ' + (s.guarantee ? 85 : 70) + ' · Mısır bağlılığı ' + (s.egypt.independent ? 'yok' : fmt(s.egypt.loyalty)) + '</p></section>' +
+      '<section class="kronik"><h2>Kronik</h2><ul>' + (chron || '<li>20 Kasım 1815: İkinci Paris Antlaşması. Avrupa barışta; İstanbul\'da hazine boş.</li>') + '</ul></section></aside>';
+  }
+
+  // ---------- modals ----------
+  function whyModal() {
+    var id = ui.why, body = '', title = '';
+    if (id === 'hazine') { var inc = M.incomeBreak(s), exp = M.expenseBreak(s); title = 'Hazine: neden?'; body = '<h3>Gelir · ' + fmt(inc.total, 1) + '</h3>' + table(inc.lines) + '<h3>Gider · ' + fmt(exp.total, 1) + '</h3>' + table(exp.lines) + '<p class="note">Net ' + sg(inc.total - exp.total, 1) + ' / yıl.</p>'; }
+    if (id === 'borc') { title = 'Borç: neden?'; body = table([{ n: 'İç borç (Galata)', v: s.D, why: 'faiz %8, tavan 40' }, { n: 'Dış borç (Londra)', v: s.F, why: 'faiz %' + fmt(M.foreignRate(s), 1) + ': istikrar, borç ve Tanzimat belirler' }]) + (s.bankrupt ? '<p class="note bad">İflas edildi: alacaklılar idaresi gelirin bir kısmını alıyor.</p>' : ''); }
+    if (id === 'istikrar') {
+      var sb = M.stabilityBreak(s); title = 'İstikrar ' + sb.total + ': neden?';
+      body = '<table class="t"><tr><td>Taban</td><td class="num">50</td></tr>' + sb.actors.map(function (a) { return '<tr class="grp"><td>' + esc(a.n) + '</td><td class="num">' + sg(a.v) + '</td></tr>' + a.why.map(function (w) { return '<tr class="sub"><td>' + esc(w.why) + '</td><td class="num">' + sg(w.v) + '</td></tr>'; }).join(''); }).join('') +
+        sb.temps.map(function (t) { return '<tr class="grp"><td>' + esc(t.n) + why('geçici, her yıl azalır') + '</td><td class="num">' + sg(t.v) + '</td></tr>'; }).join('') + '</table><p class="note">İstikrar 15\'in altına inerse her yıl sonunda darbe riski doğar. Düşük istikrar reform gücünü ve dolaylı vergileri azaltır.</p>';
+    }
+    if (id === 'reform') { title = 'Reform gücü: neden?'; body = table(M.rpGainBreak(s).lines) + '<p class="note">Zaferler ve başarılı büyük reformlar ek reform gücü verir.</p>'; }
+    if (id === 'bagimlilik') { var db = M.dependenceBreak(s); title = 'Bağımlılık ' + db.total + ': neden?'; body = db.lines.length ? table(db.lines) : '<p>Henüz yabancı bir güce bağlı değilsin.</p>'; body += '<p class="note">Bağımlılık alacaklı ve tedarikçilerin talep gücüdür: imtiyaz, gümrük tavanı, savaşta ambargo.</p>'; }
+    return modal(title, body, btn('closewhy', 'Kapat', { cls: 'btn primary' }), 'sheet');
+  }
+  function modal(title, body, foot, cls) { return '<div class="scrim"><div class="modal ' + (cls || '') + '" role="dialog" aria-modal="true" aria-label="' + esc(title) + '"><h2>' + esc(title) + '</h2><div class="mbody">' + body + '</div><div class="mfoot">' + foot + '</div></div></div>'; }
+
+  function eventModal() {
+    var c = ui.card;
+    var body = '<p class="place">' + esc(c.place) + '</p><p class="etext">' + esc(c.text) + '</p>' + (c.forecast ? '<div class="fcbox paper"><h4>' + esc(c.forecast.label) + ' ' + fcPill(c.forecast.fc) + '</h4>' + fcTable(c.forecast.fc) + '</div>' : '') +
+      '<div class="opts">' + c.opts.map(function (o, i) { return '<button class="opt" data-act="choose" data-arg="' + i + '"' + (o.disabled ? ' disabled' : '') + '><b>' + esc(o.label) + '</b><span>' + esc(o.disabled || o.eff) + '</span></button>'; }).join('') + '</div>';
+    return modal(c.title, body, '<span class="note">Karar ver; bu yılın işlerine sonra geçersin.</span>', 'paper');
+  }
+  function resultModal() {
+    var r = ui.result, body = '';
+    if (r.battle) {
+      var b = r.battle;
+      body = '<p class="outcome ' + (b.won ? 'good' : 'bad') + '">' + (b.won ? 'Kazandın' : 'Kaybettin') + '. Kayıplar ' + b.lossUs.toLocaleString('tr-TR') + '\'e ' + b.lossThem.toLocaleString('tr-TR') + '. Kazanma ihtimali yaklaşık ' + pct(b.fc.win) + ' idi.</p><h3>Neden?</h3>' + fcTable(b.fc) +
+        '<p class="note">Yeşil satırlarda öndeydin, kırmızı satırlarda geride. Her satırın kaynağı yatırımlarındır.</p>';
+    } else body = '<p class="etext">' + esc(r.text || '') + '</p>';
+    return modal(r.title, body, btn('next', 'Devam', { cls: 'btn primary' }), 'paper ' + (r.good === true ? 'good' : (r.good === false ? 'bad' : '')));
+  }
+  function reportModal() {
+    var R = ui.report;
+    var body = '<ul class="rep">' + R.lines.map(function (l) { return '<li class="' + l.k + '">' + esc(l.t) + '</li>'; }).join('') + '</ul>';
+    return modal(R.year + ' yılının hesabı', body, btn('next', s.over ? 'Sonuca geç' : s.year + ' yılına geç', { cls: 'btn primary' }), 'report');
+  }
+  function decadeModal() {
+    var h = s.history, now = h[h.length - 1], first = h[0];
+    function row(n, a, b, d) { return '<tr><td>' + n + '</td><td class="num">' + a + '</td><td class="num">' + b + '</td>' + (d != null ? '<td class="num">' + d + '</td>' : '<td></td>') + '</tr>'; }
+    var body = '<p class="lead">On yıl raporu: 1816\'dan bugüne. Rakipler de her yıl yatırım yaptı.</p><table class="t"><thead><tr><th></th><th class="num">1816</th><th class="num">' + now.y + '</th><th class="num">Rakip</th></tr></thead>' +
+      row('Balkan gücü (Rusya)', fmt(first.pb), fmt(now.pb), fmt(now.pr)) + row('Suriye gücü (Mısır)', fmt(first.ps), fmt(now.ps), fmt(now.pe)) +
+      row('Bilinen teknoloji', first.techs, now.techs, null) + row('Ortalama teknoloji gecikmesi', fmt(first.gap, 1) + ' yıl', fmt(now.gap, 1) + ' yıl', null) +
+      row('Yıllık gelir', fmt(first.income), fmt(now.income), null) + row('Borç', fmt(first.debt), fmt(now.debt), null) + row('İstikrar', first.stab, now.stab, null) + row('Bağımlılık', first.dep, now.dep, null) + '</table>' + spark() +
+      '<p class="note">' + (now.pb >= now.pr ? 'Balkan\'da Rusya ile başa baş ya da öndesin.' : 'Balkan\'da Rusya\'nın gücünün %' + Math.round(100 * now.pb / now.pr) + '\'indesin.') + ' ' + (now.ps >= now.pe ? 'Suriye\'de Mısır\'dan güçlüsün.' : 'Mısır, Suriye\'de senden güçlü.') + '</p>';
+    return modal('On yıl raporu · ' + now.y, body, btn('next', 'Devam', { cls: 'btn primary' }), 'report');
+  }
+  function spark() {
+    var h = s.history.filter(function (x, i, a) { return i === 0 || x.y !== a[i - 1].y; }); if (h.length < 2) return '';
+    var W = 520, H = 150, pad = 30, max = 0; h.forEach(function (x) { max = Math.max(max, x.pb, x.pr, x.ps, x.pe); }); max = Math.ceil(max / 20) * 20 || 20;
+    function X(i) { return pad + (W - pad - 10) * i / (h.length - 1); } function Y(v) { return H - 20 - (H - 34) * v / max; }
+    function path(k) { return h.map(function (x, i) { return (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(x[k]).toFixed(1); }).join(' '); }
+    var grid = ''; for (var g = 0; g <= max; g += max / 4) grid += '<line x1="' + pad + '" x2="' + (W - 10) + '" y1="' + Y(g) + '" y2="' + Y(g) + '" class="gl"/><text x="' + (pad - 6) + '" y="' + (Y(g) + 4) + '" class="gt" text-anchor="end">' + Math.round(g) + '</text>';
+    return '<figure class="spark"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Güç karşılaştırması">' + grid +
+      '<text x="' + pad + '" y="' + (H - 4) + '" class="gt">' + h[0].y + '</text><text x="' + (W - 10) + '" y="' + (H - 4) + '" class="gt" text-anchor="end">' + h[h.length - 1].y + '</text>' +
+      '<path d="' + path('pr') + '" class="ln ru"/><path d="' + path('pe') + '" class="ln eg"/><path d="' + path('pb') + '" class="ln us"/><path d="' + path('ps') + '" class="ln us2"/></svg>' +
+      '<figcaption><span class="k us"></span>Biz (Balkan) <span class="k us2"></span>Biz (Suriye) <span class="k ru"></span>Rusya <span class="k eg"></span>Mısır</figcaption></figure>';
+  }
+
+  // ---------- intro and end ----------
+  function intro() {
+    var saved = load();
+    var resume = saved && saved.s && !saved.s.over && saved.s.year > M.START;
+    return '<main class="intro"><div class="paper-sheet"><p class="place">İstanbul, 20 Kasım 1815</p><h1>Sadrazamın brifingi</h1>' +
+      '<p>Napolyon savaşları bitti; Avrupa Paris\'te barışı imzaladı. İmparatorluk yerinde, ama üç dosya masada:</p>' +
+      '<ul class="brief"><li><b>Hazine boş.</b> Toprak vergisini iltizamcılar topluyor; devletin eline yarısı geçmiyor.</li><li><b>Ordu Yeniçerilerin elinde.</b> Kâğıtta 60 bin, sahada talimsiz ve her yeniliğe düşman. Selim III bu yüzden tahtını kaybetti.</li><li><b>Mısır valisi Mehmed Ali hızla güçleniyor.</b> Fransız subaylarla yeni bir ordu kuruyor. Kuzeyde Rusya Balkanları gözlüyor.</li></ul>' +
+      '<p>1816\'dan 1840\'a her yıl birkaç karar ver: bütçe ve borç, projeler, teknoloji, reform, diplomasi, ordu. Sonra <b>Yılı bitir</b>. Her sayının üzerine dokunursan nedenini görürsün. Krizler ve savaşlar sistemden doğar; her muharebenin raporu, yaptığın yatırımları adıyla anar.</p>' +
+      '<p class="note">Bu bir deneme: harita ve süs yok, yalnızca kararlar. 15–25 dakika sürer. Sonunda üç kararını ve nedenini, bir de "devam etmek ister miydin?" sorusunu soracağız.</p>' +
+      '<label class="field">Adın (isteğe bağlı) <input id="pname" type="text" maxlength="40" value="' + esc(ui.name) + '" autocomplete="off"></label>' +
+      '<div class="actions">' + btn('start', 'Başla', { cls: 'btn primary big' }) + (resume ? btn('resume', 'Kaldığın yerden devam et (' + saved.s.year + ')', { cls: 'btn' }) : '') + '</div></div></main>';
+  }
+  function endView() {
+    var v = M.verdict(s), mins = Math.max(1, Math.round((Date.now() - s.started) / 60000));
+    var reason = s.endReason === 'coup' ? 'İstikrar çöktü; ' + (s.year - 1) + ' yılında saray darbesi.' : '1 Ocak 1841. Deneme burada bitiyor; tam oyunda yol 1914\'e uzanır.';
+    var picks = ui.picks || {};
+    var dec = s.decisions.map(function (d, i) { var on = picks[i] != null; return '<label class="dec' + (on ? ' on' : '') + '"><input type="checkbox" data-act="pick" data-arg="' + i + '"' + (on ? ' checked' : '') + '><span><b>' + d.y + '</b> ' + esc(d.t) + '</span></label>' + (on ? '<textarea class="reason" id="why' + i + '" data-arg="' + i + '" placeholder="Neden bu kararı verdin?">' + esc(picks[i]) + '</textarea>' : ''); }).join('');
+    var n = Object.keys(picks).length;
+    var sent = ui.sent;
+    return '<main class="end"><div class="paper-sheet"><p class="place">' + esc(reason) + '</p><h1>' + esc(v.title) + '</h1><p class="note">Tarihin Hükmü\'nün deneme sürümü: yedi alan ayrı ayrı tartılır, tek skor yoktur.</p>' +
+      '<div class="areas">' + v.areas.map(function (a) { return '<div class="area"><span>' + esc(a.n) + '</span>' + bar(a.v, 100) + '<b>' + a.v + '</b>' + why(a.why) + '</div>'; }).join('') + '</div>' + spark() + '</div>' +
+      '<div class="paper-sheet survey"><h2>Üç kararın</h2><p>Aşağıdan en önemli bulduğun <b>üç kararı</b> seç ve her birinin nedenini bir iki cümleyle yaz.</p><div class="decs">' + (dec || '<p>Hiç karar kaydedilmedi.</p>') + '</div>' +
+      '<p class="count">' + n + ' / 3 seçildi</p>' +
+      '<h2>Devam etmek ister miydin?</h2><div class="seg wide">' + ['Evet', 'Belki', 'Hayır'].map(function (x) { return '<button class="' + (ui.cont === x ? 'on' : '') + '" data-act="cont" data-arg="' + x + '">' + x + '</button>'; }).join('') + '</div>' +
+      '<textarea id="contwhy" placeholder="Neden? Seni ne çekti ya da ne sıktı?">' + esc(ui.contWhy || '') + '</textarea>' +
+      '<textarea id="note" placeholder="İstersen: anlamadığın ya da değiştirmek istediğin bir şey">' + esc(ui.note || '') + '</textarea>' +
+      '<div class="actions">' + btn('submit', 'Sonucu gönder', { cls: 'btn primary big', disabled: n !== 3 || !ui.cont }) + btn('again', 'Yeniden oyna', { cls: 'btn ghost' }) + '</div>' +
+      (sent ? '<div class="sent"><p>' + esc(sent.msg) + '</p><textarea id="outtext" readonly>' + esc(sent.text) + '</textarea>' + btn('copy', 'Metni kopyala', { cls: 'btn' }) + '</div>' : '') + '</div></main>';
+  }
+  function resultText() {
+    var v = M.verdict(s), picks = ui.picks || {}, mins = Math.max(1, Math.round((Date.now() - s.started) / 60000));
+    var t = 'Proje 1815 · Kâğıt döngü sonucu\nOyuncu: ' + (ui.name || 'isimsiz') + ' · Tohum ' + s.seed + ' · ' + mins + ' dk · Bitiş ' + (s.year - 1) + (s.endReason === 'coup' ? ' (darbe)' : '') + '\nHüküm: ' + v.title + '\n';
+    t += v.areas.map(function (a) { return a.n + ' ' + a.v; }).join(' · ') + '\n\nÜç karar:\n';
+    Object.keys(picks).forEach(function (i, k) { var d = s.decisions[i]; t += (k + 1) + ') ' + d.y + ' · ' + d.t + '\n   Neden: ' + (picks[i] || '—') + '\n'; });
+    t += '\nDevam etmek ister miydim: ' + ui.cont + (ui.contWhy ? ' · ' + ui.contWhy : '') + '\n';
+    if (ui.note) t += 'Not: ' + ui.note + '\n';
+    return t;
+  }
+  function submit() {
+    var text = resultText();
+    ui.sent = { msg: 'Kaydediliyor…', text: text }; render();
+    var rec = { name: ui.name || '', seed: s.seed, endYear: s.year - 1, endReason: s.endReason, verdict: M.verdict(s), picks: Object.keys(ui.picks).map(function (i) { return { y: s.decisions[i].y, t: s.decisions[i].t, why: ui.picks[i] || '' }; }),
+      cont: ui.cont, contWhy: ui.contWhy || '', note: ui.note || '', minutes: Math.max(1, Math.round((Date.now() - s.started) / 60000)), decisions: s.decisions, history: s.history, at: new Date().toISOString() };
+    var done = false;
+    function fallback() { if (done) return; done = true; ui.sent = { msg: 'Bu sayfa sonucu otomatik kaydedemedi. Aşağıdaki metni kopyalayıp Tolga\'ya gönder.', text: text }; render(); }
+    try {
+      if (!window.claude || !window.claude.use) return fallback();
+      window.claude.use('db').then(function (db) {
+        if (!db) return fallback();
+        db.collection('responses').add(rec).then(function () { done = true; ui.sent = { msg: 'Kaydedildi, teşekkürler. Aynı metni istersen kopyalayıp Tolga\'ya da gönderebilirsin.', text: text }; render(); }, fallback);
+      }, fallback);
+      setTimeout(fallback, 12000);
+    } catch (e) { fallback(); }
+  }
+
+  // ---------- flow ----------
+  function nextEvent() {
+    ui.card = null; ui.result = null; s.cardId = null; s.queue = s.queue || [];
+    while (s.queue.length) { var id = s.queue.shift(); var c = M.eventCard(s, id); if (c) { ui.card = c; s.cardId = id; ui.view = 'event'; return; } }
+    ui.view = s.over ? 'end' : 'play'; ui.nizamStart = s.nizamTarget;
+  }
+  function startEvents() { s.queue = s.events.slice(); s.events = []; nextEvent(); }
+  function resume() {
+    ui.nizamStart = s.nizamTarget; ui.picks = ui.picks || {};
+    if (s.over) { ui.view = 'end'; return; }
+    if (s.cardId) { var c = M.eventCard(s, s.cardId); if (c) { ui.card = c; ui.view = 'event'; return; } }
+    if (s.queue && s.queue.length) { nextEvent(); return; }
+    if (s.events && s.events.length) { startEvents(); return; }
+    ui.view = 'play';
+  }
+  function endTheYear() {
+    if (s.nizamTarget !== ui.nizamStart) M.A.commitNizam(s);
+    var y = s.year, lines = M.endYear(s);
+    ui.report = { year: y, lines: lines }; ui.view = 'report'; ui.decade = (y === 1825 || y === 1835) && !s.over;
+    window.scrollTo(0, 0);
+  }
+  function after() {
+    if (ui.view === 'report') { if (ui.decade) { ui.decade = false; ui.view = 'decade'; return; } if (s.over) { ui.view = 'end'; return; } startEvents(); return; }
+    if (ui.view === 'decade') { startEvents(); return; }
+    if (ui.view === 'result') { nextEvent(); return; }
+  }
+  function flash(msg) { var f = document.createElement('div'); f.className = 'toast'; f.textContent = msg; document.body.appendChild(f); setTimeout(function () { f.remove(); }, 2600); }
+  function act(a, arg) {
+    var r;
+    switch (a) {
+      case 'start': ui.name = (document.getElementById('pname') || {}).value || ''; s = M.newGame(1815); ui.picks = {}; ui.sent = null; ui.cont = null; startEvents(); break;
+      case 'resume': var sv = load(); s = sv.s; ui.name = sv.name || ''; ui.picks = {}; resume(); break;
+      case 'tab': ui.tab = arg; break;
+      case 'why': ui.why = arg; break;
+      case 'closewhy': ui.why = null; break;
+      case 'tax': M.A.setTax(s, +arg); break;
+      case 'trade': M.A.setTrade(s, arg); break;
+      case 'borrowD': r = M.A.borrowD(s); break;
+      case 'borrowF': r = M.A.borrowF(s); break;
+      case 'repay': r = M.A.repay(s); break;
+      case 'project': r = M.A.project(s, arg); break;
+      case 'focus': M.A.focus(s, arg); break;
+      case 'advisor': r = M.A.advisor(s, arg); break;
+      case 'import': r = M.A.importRifles(s); break;
+      case 'raise': r = M.A.raise(s, arg); break;
+      case 'lower': r = M.A.lower(s, arg); break;
+      case 'law': r = M.A.law(s, arg); if (r && r.result) { ui.result = r.result; ui.view = 'result'; } break;
+      case 'favor': r = M.A.favor(s, arg); break;
+      case 'dip': r = M.A.dip(s, arg); break;
+      case 'nizam': M.A.setNizam(s, s.nizamTarget + (+arg)); break;
+      case 'end': endTheYear(); break;
+      case 'choose': var o = ui.card.opts[+arg]; if (!o || o.disabled) return; ui.result = o.fn(); s.cardId = null; ui.card = null; ui.view = 'result'; break;
+      case 'next': after(); break;
+      case 'pick': ui.picks = ui.picks || {}; if (ui.picks[arg] != null) delete ui.picks[arg]; else if (Object.keys(ui.picks).length < 3) ui.picks[arg] = ''; else flash('En fazla üç karar seçebilirsin.'); break;
+      case 'cont': ui.cont = arg; break;
+      case 'submit': submit(); return;
+      case 'copy': var ta = document.getElementById('outtext'); if (ta) { var txt = ta.value; try { navigator.clipboard.writeText(txt).then(function () { flash('Kopyalandı'); }, function () { ta.select(); flash('Metni seçtim; kopyala.'); }); } catch (e) { ta.select(); } } return;
+      case 'again': clearSave(); s = null; ui = { view: 'intro', tab: 'butce', name: ui.name, picks: {} }; break;
+    }
+    if (r && r.ok === false && r.why) flash(r.why);
+    render();
+  }
+
+  // ---------- render ----------
+  function render() {
+    var y = window.scrollY, html;
+    if (!s || ui.view === 'intro') html = intro();
+    else if (ui.view === 'end') html = endView();
+    else {
+      var pane = { butce: tabButce, proje: tabProje, bilim: tabBilim, reform: tabReform, diplomasi: tabDip, ordu: tabOrdu }[ui.tab]();
+      html = header() + '<div class="layout"><div class="main">' + tabs() + pane + '</div>' + side() + '</div>' +
+        '<footer class="endbar"><span class="hint">' + (s.focus ? 'Araştırma: ' + esc(M.TECHS[s.focus].n) : '<b>Araştırma konusu seçilmedi</b>') + ' · Nizam hedefi ' + s.nizamTarget + ' bin</span>' + btn('end', 'Yılı bitir · ' + s.year + ' →', { cls: 'btn primary' }) + '</footer>';
+      if (ui.view === 'event' && ui.card) html += eventModal();
+      if (ui.view === 'result' && ui.result) html += resultModal();
+      if (ui.view === 'report') html += reportModal();
+      if (ui.view === 'decade') html += decadeModal();
+      if (ui.why) html += whyModal();
+    }
+    // keep the survey's text while re-rendering
+    var keep = {}; ['contwhy', 'note', 'pname'].forEach(function (id) { var el = document.getElementById(id); if (el) keep[id] = el.value; });
+    document.querySelectorAll('textarea.reason').forEach(function (el) { if (ui.picks && ui.picks[el.dataset.arg] != null) ui.picks[el.dataset.arg] = el.value; });
+    if (keep.contwhy != null) ui.contWhy = keep.contwhy; if (keep.note != null) ui.note = keep.note; if (keep.pname != null) ui.name = keep.pname;
+    app.innerHTML = html;
+    if (ui.view === 'play' || ui.view === 'end') window.scrollTo(0, y);
+    if (s) save();
+  }
+  app.addEventListener('click', function (e) { var b = e.target.closest('[data-act]'); if (!b || b.disabled) return; if (b.tagName === 'INPUT') return; e.preventDefault(); act(b.dataset.act, b.dataset.arg); });
+  app.addEventListener('change', function (e) { var b = e.target; if (b.matches('input[type=checkbox][data-act]')) act(b.dataset.act, b.dataset.arg); });
+  app.addEventListener('input', function (e) {
+    var t = e.target;
+    if (t.classList.contains('reason')) ui.picks[t.dataset.arg] = t.value;
+    if (t.id === 'contwhy') ui.contWhy = t.value; if (t.id === 'note') ui.note = t.value; if (t.id === 'pname') ui.name = t.value;
+    var sb = document.querySelector('[data-act=submit]'); if (sb) sb.disabled = Object.keys(ui.picks || {}).length !== 3 || !ui.cont;
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ui.why) { ui.why = null; render(); } });
+
+  // live updates keep the game in progress
+  function boot(data) { if (data && data.s) { s = data.s; ui.tab = data.tab || 'butce'; ui.name = data.name || ''; ui.picks = data.picks || {}; ui.cont = data.cont || null; resume(); } render(); }
+  try { if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(function () { return s ? { s: s, tab: ui.tab, name: ui.name, picks: ui.picks, cont: ui.cont } : {}; }); } catch (e) { }
+  if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(boot); else boot(window.claude && window.claude.hot && window.claude.hot.data);
+})();
+// ==UI END==
+
+</script>
+
+</body>
+</html>
