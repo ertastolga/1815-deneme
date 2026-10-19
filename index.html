@@ -261,6 +261,8 @@ textarea { min-height: 64px; margin-top: 8px; resize: vertical; }
 @media (prefers-reduced-motion: no-preference) { .modal { animation: rise .22s ease-out; } @keyframes rise { from { transform: translateY(8px); } to { transform: none; } } }
 
 /* v2: before and after, goals, the path, glossary */
+.retake{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:8px}
+.retake .btn{margin-top:6px;white-space:normal;text-align:left}
 .up { color: var(--good); } .down { color: var(--bad); }
 .pv { display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 6px 0 2px; padding: 6px 8px; border-left: 2px solid var(--brass-dim); background: color-mix(in srgb, var(--panel2) 70%, transparent); font-size: .82rem; line-height: 1.35; }
 .pv-h { width: 100%; color: var(--brass); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
@@ -357,7 +359,7 @@ var M = (function () {
     ae: { n: 'Askerî eğitim', area: 'Ordu', rp: [0, 3, 4, 5], up: [0, 4, 8, 12], req: [null, null, 'doktrin', 'kurmay'],
       what: 'Her seviye Nizam askerinin eğitimini yaklaşık %14, komutayı %6 iyileştirir.', who: 'Yeniçeriler karşı çıkar: istikrar −4, her seviyede (Ocak varken)' },
     si: { n: 'Sanayi teşviki', area: 'Sanayi', rp: [0, 3, 4, 5], up: [0, 3, 7, 12], req: [null, null, 'buhar', 'dokuma'],
-      what: 'Her seviye atölye ve fabrika gelirini %20 artırır; 1. ve 3. seviyede aynı anda bir inşaat daha yürür.', who: 'Tüccar ve esnaf destekler: istikrar +1, her seviyede' },
+      what: 'Her seviye mamul vergisi getirir: istikrar 50 iken yılda 4 milyon kuruş, Buhar makinesi ve Mekanik dokuma bilinince 7; istikrar düşükse daha az. Tüfekhane her seviyede yılda 2 bin tüfek fazla üretir, Feshane geliri %20 artar. 1. ve 3. seviyede aynı anda bir inşaat daha yürür.', who: 'Tüccar ve esnaf destekler: istikrar +1, her seviyede' },
     zi: { n: 'Ziraat ıslahı', area: 'Tarım', rp: [0, 2, 3, 4], up: [0, 2, 5, 9], req: [null, null, 'nobet', 'tohum'],
       what: 'Her seviye toprak vergisini %8 artırır, ekonomiyi hızlandırır ve kıtlığı hafifletir.', who: 'Ayanlar destekler: istikrar +1, her seviyede' },
     mt: { n: 'Maarif teşkilatı', area: 'Maarif', rp: [0, 3, 4, 5], up: [0, 3, 7, 12], req: [null, null, 'ogretmen', 'lab'],
@@ -365,14 +367,15 @@ var M = (function () {
   };
 
   var PROJ = {
-    tufekhane: { n: 'İzmir Tüfekhanesi', cost: 18, yrs: 2, up: 2, desc: 'Her yıl 6 bin modern tüfek. Kapsüllü tüfek bilinirse Nizam askerinin teçhizatı ayrıca %12 iyileşir.' },
-    tophane: { n: 'Tophane ıslahı', cost: 14, yrs: 2, up: 2, desc: 'Sahra topçusu: bütün ordunun teçhizatı %8 iyileşir.' },
+    tufekhane: { n: 'İzmir Tüfekhanesi', cost: 18, yrs: 2, up: 2, desc: 'Her yıl 6 bin modern tüfek (Sanayi teşvikinin her seviyesi +2 bin). Kapsüllü tüfek bilinirse Nizam askerinin teçhizatı ayrıca %12 iyileşir.' },
+    tophane: { n: 'Tophane ıslahı', cost: 14, yrs: 2, up: 2, desc: 'Sahra topçusu: bütün ordunun teçhizatı %8 iyileşir. Ocak varken sadık topçular Ocak\'ın kaldırılma ihtimalini 8 puan artırır.' },
     feshane: { n: 'Feshane dokuma atölyesi', cost: 16, yrs: 2, up: 1, desc: 'Yılda 6 milyon kuruş mamul geliri (Mekanik dokumayla %50 fazla). Loncalar karşı çıkar: istikrar −2.' },
     sose: { n: 'İstanbul–Edirne şosesi', cost: 14, yrs: 2, up: 1, desc: 'Balkan cephesinde ikmal %12 iyileşir. Ticaret geliri yılda +2 milyon kuruş.' },
     rusdiye: { n: 'Rüşdiye mektepleri', cost: 10, yrs: 1, up: 2, reqInst: ['mt', 1], desc: 'Yılda +1 araştırma puanı. Ulema karşı çıkar: istikrar −2.' },
     ciftlik: { n: 'Örnek çiftlik', cost: 8, yrs: 1, up: 1, reqInst: ['zi', 1], desc: 'Toprak vergisi %5 artar.' },
     harbiye: { n: 'Mekteb-i Harbiye', cost: 16, yrs: 2, up: 3, reqInst: ['ae', 2], desc: 'Subay okulu: komuta %12 iyileşir.' },
     darulfunun: { n: 'Darülfünun', cost: 20, yrs: 3, up: 4, reqInst: ['mt', 2], desc: 'Yılda +2 araştırma puanı. Ulema karşı çıkar: istikrar −2.' },
+    zaptiye: { n: 'Zaptiye teşkilatı', cost: 14, yrs: 1, up: 2, desc: 'Taşrada asayiş ve düzenli jandarma: istikrar kalıcı olarak +4. Kalemiye güçlenir; güçlü Kalemiye yılda +1 reform gücü getirir.' },
     tersane: { n: 'Buharlı tersane', cost: 22, yrs: 3, up: 3, reqTech: 'buhar', desc: 'Deniz yoluyla ikmal: Mora ve Suriye cephesinde ikmal %15 iyileşir.' },
     kisla: { n: 'Rami Kışlası', cost: 12, yrs: 1, up: 1, desc: 'Nizam askeri yılda 6 bin daha hızlı toplanır.' },
     baruthane: { n: 'Azadlı Baruthanesi', cost: 12, yrs: 2, up: 1, desc: 'Daha iyi barut: bütün ordunun teçhizatı %5 iyileşir.' }
@@ -448,6 +451,7 @@ var M = (function () {
     if (s.laws.redif) L.push({ a: 'aya', v: -5, why: 'Zorunlu askerlik' });
     if (zi > 0) L.push({ a: 'aya', v: zi, why: 'Ziraat ıslahı' });
     L.push({ a: 'kal', v: 2, why: 'Kalemiye düzenli işliyor' });
+    if (built(s, 'zaptiye')) L.push({ a: 'kal', v: 4, why: 'Zaptiye teşkilatı: taşrada asayiş' });
     var lv = s.inst.ae.lvl + s.inst.si.lvl + s.inst.zi.lvl + s.inst.mt.lvl;
     if (lv > 0) L.push({ a: 'kal', v: Math.min(5, lv), why: 'Kurum seviyeleri toplamı ' + lv });
     if (s.laws.vergi) L.push({ a: 'kal', v: 4, why: 'Merkezî vergi: iltizam kalktı' });
@@ -488,6 +492,7 @@ var M = (function () {
       var f = 6 * (knows(s, 'dokuma') ? 1.5 : 1) * (1 + 0.2 * instEff(s, 'si')) * ((s.trade === 'free' || s.treaty) ? 0.6 : 1);
       L.push({ n: 'Feshane', v: f, why: (knows(s, 'dokuma') ? 'Mekanik dokuma +%50; ' : '') + ((s.trade === 'free' || s.treaty) ? 'ucuz ithal kumaş −%40' : 'korunan iç pazar') });
     }
+    if (instEff(s, 'si') > 0) { var per = 4 + (knows(s, 'buhar') ? 1.5 : 0) + (knows(s, 'dokuma') ? 1.5 : 0); L.push({ n: 'Mamul vergisi', v: instEff(s, 'si') * per * (0.8 + st / 250), why: 'Sanayi teşviki ' + instEff(s, 'si') + '. seviye × ' + String(per).replace('.', ',') + (knows(s, 'buhar') || knows(s, 'dokuma') ? ' (' + [knows(s, 'buhar') ? 'buhar' : '', knows(s, 'dokuma') ? 'mekanik dokuma' : ''].filter(Boolean).join(' ve ') + ' dahil)' : '') + ' × istikrar etkisi ' + String(Math.round((0.8 + st / 250) * 100) / 100).replace('.', ',') + ' (istikrar ' + st + ')' }); }
     if (built(s, 'sose')) L.push({ n: 'Şose ticareti', v: 2, why: 'İstanbul–Edirne şosesi' });
     if (s.concessions.indexOf('izmir') >= 0) L.push({ n: 'İzmir limanı', v: 3.6, why: '6 gelir; %40 İngiliz şirketinin' });
     if (!s.egypt.independent && s.egypt.loyalty >= 30 && s.egypt.tribute > 0) L.push({ n: 'Mısır haracı', v: s.egypt.tribute, why: 'Mehmed Ali sadık (bağlılık ' + Math.round(s.egypt.loyalty) + ')' });
@@ -556,7 +561,7 @@ var M = (function () {
     syria: { n: 'Suriye cephesi', share: 0.5, supply: 0.8, fort: 1.0 },
     mora: { n: 'Mora', share: 0.5, supply: 0.75, fort: 1.0 }
   };
-  function ourSide(s, front) {
+  function ourSide(s, front, attack) {
     var F = FRONTS[front], janE = s.ocak ? s.jan * 0.7 : 0, tot = s.nizam + janE;
     var men = tot * F.share; if (front === 'mora') men = Math.min(men, 45);
     var w = tot > 0 ? s.nizam / tot : 0, ae = instEff(s, 'ae');
@@ -583,7 +588,7 @@ var M = (function () {
     var wear = s.temp.filter(function (t) { return t.id === 'wear'; }).reduce(function (a, t) { return a + t.v; }, 0);
     var mor = 0.75 + stability(s) / 200 + wear / 100;
     var mrWhy = ['istikrar ' + stability(s)]; if (wear) mrWhy.push('savaş yorgunluğu');
-    var ter = F.fort, tWhy = [front === 'balkan' ? 'Tuna kaleleri (Şumnu, Silistre)' : 'açık arazi'];
+    var ter = attack ? 1.0 : F.fort, tWhy = [attack ? 'saldıran taraf' : (front === 'balkan' ? 'Tuna kaleleri (Şumnu, Silistre)' : 'açık arazi')];
     return { men: men, f: [
       { k: 'Teçhizat', v: equip, why: eqWhy.join('; ') },
       { k: 'Eğitim', v: train, why: trWhy.join('; ') },
@@ -593,21 +598,25 @@ var M = (function () {
       { k: 'Arazi ve tahkimat', v: ter, why: tWhy.join('; ') }
     ] };
   }
-  function enemySide(s, who) {
+  function enemySide(s, who, attack) {
     if (who === 'russia') {
       var R = s.russia;
       return { n: 'Rus ordusu', men: R.men, f: [
         { k: 'Teçhizat', v: R.equip, why: 'Tula fabrikaları' }, { k: 'Eğitim', v: R.train, why: 'Napolyon savaşları gazileri' },
         { k: 'Komuta', v: R.cmd, why: 'kurmay heyeti' }, { k: 'İkmal', v: 0.9, why: 'Tuna ötesi uzun hat' },
-        { k: 'Moral', v: 1.0, why: '' }, { k: 'Arazi ve tahkimat', v: 1.0, why: 'saldıran taraf' }] };
+        { k: 'Moral', v: 1.0, why: '' }, attack ? { k: 'Arazi ve tahkimat', v: 1.15, why: 'savunan taraf: Rus tahkimatı' } : { k: 'Arazi ve tahkimat', v: 1.0, why: 'saldıran taraf' }] };
     }
     if (who === 'egypt') {
       var E = s.egypt;
       return { n: 'Mısır ordusu', men: E.men * 0.6, f: [
         { k: 'Teçhizat', v: E.equip, why: 'Mısır fabrikaları' }, { k: 'Eğitim', v: E.train, why: 'Fransız eğitmenler (Sève)' },
         { k: 'Komuta', v: E.cmd, why: 'İbrahim Paşa' }, { k: 'İkmal', v: 0.95, why: 'deniz ve Suriye yolları' },
-        { k: 'Moral', v: 1.05, why: 'zaferler' }, { k: 'Arazi ve tahkimat', v: 1.0, why: 'saldıran taraf' }] };
+        { k: 'Moral', v: 1.05, why: 'zaferler' }, attack ? { k: 'Arazi ve tahkimat', v: 1.1, why: 'savunan taraf: Akka ve Suriye kaleleri' } : { k: 'Arazi ve tahkimat', v: 1.0, why: 'saldıran taraf' }] };
     }
+    if (who === 'greeks') return { n: 'Yunan ordusu', men: 26, f: [
+        { k: 'Teçhizat', v: 0.9, why: 'Avrupa\'dan gelen tüfekler' }, { k: 'Eğitim', v: 0.8, why: 'Bavyeralı subaylar' },
+        { k: 'Komuta', v: 0.85, why: 'genç devlet' }, { k: 'İkmal', v: 0.95, why: 'kendi toprağı' },
+        { k: 'Moral', v: 1.15, why: 'bağımsızlık' }, { k: 'Arazi ve tahkimat', v: 1.25, why: 'dağlar' }] };
     var y = s.greekYears;
     return { n: 'Mora isyancıları', men: 18 + 2 * y, f: [
       { k: 'Teçhizat', v: 0.8, why: 'eski tüfekler, gönüllü silahları' }, { k: 'Eğitim', v: 0.65, why: 'düzensiz kuvvet' },
@@ -615,20 +624,22 @@ var M = (function () {
       { k: 'Moral', v: 1.15, why: 'bağımsızlık' }, { k: 'Arazi ve tahkimat', v: 1.25, why: 'dağlar' }] };
   }
   function power(side) { var q = 1; side.f.forEach(function (x) { q *= x.v; }); q = clamp(q, 0.3, 2.6); return { q: q, p: side.men * q }; }
-  function forecast(s, front, who) {
-    var a = ourSide(s, front), b = enemySide(s, who), pa = power(a), pb = power(b);
+  function forecast(s, front, who, attack) {
+    var a = ourSide(s, front, attack), b = enemySide(s, who, attack), pa = power(a), pb = power(b);
     var ratio = pb.p > 0 ? pa.p / pb.p : 9, k = Math.pow(ratio, 2.5), win = k / (1 + k);
     var weakest = null, wv = 99;
     a.f.forEach(function (x, i) { var d = x.v / b.f[i].v; if (d < wv) { wv = d; weakest = x.k; } });
     var lvl = win >= 0.65 ? 'Yüksek' : (win >= 0.4 ? 'Orta' : 'Düşük');
     return { us: a, them: b, pa: pa, pb: pb, ratio: ratio, win: win, lo: clamp(win - 0.08, 0.02, 0.98), hi: clamp(win + 0.08, 0.02, 0.98), level: lvl, weakest: weakest };
   }
-  function battle(s, front, who, purpose) {
-    var fc = forecast(s, front, who), d = draw(s, 'battle-' + purpose);
+  function battle(s, front, who, purpose, attack) {
+    var fc = forecast(s, front, who, attack), d = draw(s, 'battle-' + purpose);
     var won = d < fc.win;
     var lossUs = Math.round(fc.us.men * (won ? 0.12 : 0.3) * 1000 / 100) * 100;
     var lossThem = Math.round(fc.them.men * (won ? 0.3 : 0.12) * 1000 / 100) * 100;
-    s.rifles = Math.max(0, s.rifles * 0.75);
+    var janE = s.ocak ? s.jan * 0.7 : 0, w = s.nizam + janE > 0 ? s.nizam / (s.nizam + janE) : 0;
+    s.nizam = Math.max(0, s.nizam - Math.round(lossUs * w / 1000));
+    s.rifles = Math.max(0, s.rifles * 0.75); s.imported = s.imported * 0.75;
     addTemp(s, 'wear', 'Savaş yorgunluğu', -6, 0.5);
     return { won: won, fc: fc, lossUs: lossUs, lossThem: lossThem };
   }
@@ -668,14 +679,19 @@ var M = (function () {
   A.raise = function (s, id) { var w = A.instCheck(s, id); if (w) return { ok: false, why: w }; var I = INST[id], st = s.inst[id], to = st.lvl + 1; s.rp -= I.rp[to]; st.pend = { to: to, yrs: 2 }; decide(s, I.n + ' kurumunu ' + to + '. seviyeye yükselttin'); return { ok: true }; };
   A.lower = function (s, id) { var st = s.inst[id]; if (st.pend || st.lvl === 0) return { ok: false, why: 'Düşürülemez' }; st.lvl -= 1; decide(s, INST[id].n + ' kurumunu ' + st.lvl + '. seviyeye düşürdün'); return { ok: true }; };
   A.ocakChance = function (s) {
-    var L = [{ n: 'Taban', v: 0.15 }];
-    L.push({ n: 'Nizam askeri ' + s.nizam + ' bin', v: 0.55 * s.nizam / (s.nizam + 30) });
-    var st = stability(s); L.push({ n: 'İstikrar ' + st, v: (st - 50) / 150 });
+    var L = [{ n: 'Taban', v: 0.2 }];
+    L.push({ n: 'Nizam askeri ' + s.nizam + ' bin', v: 0.6 * s.nizam / (s.nizam + 25) });
+    var st = stability(s); L.push({ n: 'İstikrar ' + st, v: (st - 50) / 200 });
     var ule = stabilityLines(s).filter(function (l) { return l.a === 'ule'; }).reduce(function (a, l) { return a + l.v; }, 0);
     L.push(ule >= -4 ? { n: 'Ulema yanında (' + ule + ')', v: 0.08 } : { n: 'Ulema küskün (' + ule + ')', v: -0.05 });
     if (s.adv.fr) L.push({ n: 'Fransız subaylar', v: 0.05 });
+    if (built(s, 'tophane')) L.push({ n: 'Tophane: sadık topçular', v: 0.08 });
+    if (s.fetva) L.push({ n: 'Şeyhülislam fetvası', v: 0.1 });
+    L.forEach(function (l) { l.v = Math.round(l.v * 100) / 100; });
     var p = 0; L.forEach(function (l) { p += l.v; }); return { p: clamp(p, 0.05, 0.92), lines: L };
   };
+  A.fetvaCheck = function (s) { if (!s.ocak) return 'Ocak kaldırıldı'; if (s.fetva) return 'Fetva hazır; Ocak denemesinde kullanılacak'; if (s.rp < 2) return 'Reform gücü yetmiyor (2 gerekli)'; return null; };
+  A.fetva = function (s) { var w = A.fetvaCheck(s); if (w) return { ok: false, why: w }; s.rp -= 2; s.fetva = true; decide(s, "Ocak için Şeyhülislam'dan fetva aldın"); return { ok: true }; };
   A.lawCheck = function (s, id) {
     var Lw = LAWS[id]; if (s.laws[id]) return 'Uygulandı';
     if (id === 'ocak') {
@@ -695,7 +711,7 @@ var M = (function () {
     var w = A.lawCheck(s, id); if (w) return { ok: false, why: w }; var Lw = LAWS[id]; s.rp -= Lw.rp;
     if (id === 'ocak') {
       if (s._preview) { s.rp += Lw.rp; return { ok: false, why: 'preview' }; }
-      var ch = A.ocakChance(s), d = draw(s, 'ocak');
+      var ch = A.ocakChance(s), d = draw(s, 'ocak'); s.fetva = false;
       if (d < ch.p) {
         s.ocak = false; s.jan = 0; s.rp += 3; addTemp(s, 'ocak', 'Vaka-i Hayriye: Ulema tedirgin', -4, 0.4);
         s.tension = Math.min(100, s.tension + 8);
@@ -703,7 +719,7 @@ var M = (function () {
         chron(s, "Ocak kaldırıldı. Yeniçeri gideri bitti; askerî eğitim kilidi açıldı. Rusya ordunun zayıf anını kolluyor.");
         return { ok: true, result: { title: 'Vaka-i Hayriye', good: true, text: "Sadık topçular ve Nizam kışlası hazırdı; Ocak bir günde dağıtıldı. Yeniçerilerin yıllık 27'lik ulufesi bitti, ama 42 bin kişilik kuvvet de artık yok. Askerî eğitim 3. seviyeye kadar açık. Rusya bu boşluğu kolluyor (gerginlik +8)." } };
       }
-      s.nizam = Math.round(s.nizam * 0.4); s.nizamTarget = Math.min(s.nizamTarget, s.nizam); s.inst.ae.lvl = 0; s.inst.ae.pend = null; s.rp = 0; s.ocakRetry = s.year + 4;
+      s.nizam = Math.round(s.nizam * 0.4); s.nizamTarget = Math.min(s.nizamTarget, s.nizam); s.inst.ae.lvl = 0; s.inst.ae.pend = null; s.rp = 0; s.ocakRetry = s.year + 3;
       addTemp(s, 'revolt', 'Yeniçeri isyanı', -18, 0.35);
       decide(s, "Ocak'ı kaldırmayı denedin (başarı ihtimali %" + Math.round(ch.p * 100) + ') ve isyan çıktı');
       chron(s, 'Yeniçeri isyanı: Nizam kışlası yakıldı, askerî eğitim sıfırlandı.');
@@ -730,7 +746,42 @@ var M = (function () {
   A.commitNizam = function (s) { decide(s, 'Nizam ordusunu ' + s.nizamTarget + ' bin hedefine ayarladın'); };
   var FAVOR = { all: 'Cülus bahşişi ve nişanlar' };
   A.favorCheck = function (s) { if (s.favorDone) return 'Bu yıl bir kez yapılır'; if (s.treasury < 6) return 'Hazine yetmiyor (6 milyon kuruş)'; return null; };
-  A.favor = function (s) { var w = A.favorCheck(s); if (w) return { ok: false, why: w }; s.treasury -= 6; s.favorDone = true; addTemp(s, 'favor', 'Bahşiş ve nişanlar', 5, 0.35); decide(s, 'Bahşiş ve nişan dağıtıp gönül aldın'); return { ok: true }; };
+  A.favor = function (s) { var w = A.favorCheck(s); if (w) return { ok: false, why: w }; s.treasury -= 6; s.favorDone = true; addTemp(s, 'favor', 'Bahşiş ve nişanlar', 6, 0.3); decide(s, 'Bahşiş ve nişan dağıtıp gönül aldın'); return { ok: true }; };
+  // strength has a use: a war to take back a lost province
+  var RETAKE = {
+    Suriye: { front: 'syria', who: 'egypt', n: 'Suriye', foe: 'Mısır', foeE: "Mısır'a" },
+    Girit: { front: 'syria', who: 'egypt', n: 'Girit', foe: 'Mısır', foeE: "Mısır'a" },
+    Mora: { front: 'mora', who: 'greeks', n: 'Mora', foe: 'Yunanistan', foeE: "Yunanistan'a" },
+    Sirbistan: { front: 'balkan', who: 'russia', n: 'Sırbistan', foe: 'Rusya', foeE: "Rusya'ya" },
+    Eflak: { front: 'balkan', who: 'russia', n: 'Eflak-Boğdan', foe: 'Rusya', foeE: "Rusya'ya" }
+  };
+  A.retakeCheck = function (s, r) {
+    if (!s.lost[r] || !RETAKE[r]) return 'Senin elinde';
+    if (s.warDone) return 'Bu yıl bir sefer yapıldı';
+    if (s.ocak) return 'Ocak varken ordu sefere çıkmaz';
+    if (s.nizam < 20) return 'En az 20 bin Nizam askeri gerekli';
+    if (!canAfford(s, 10)) return 'Sefer hazinesi yetmiyor (10 milyon kuruş)';
+    return null;
+  };
+  A.retakeForecast = function (s, r) { var R = RETAKE[r]; return forecast(s, R.front, R.who, true); };
+  A.retake = function (s, r) {
+    var w = A.retakeCheck(s, r); if (w) return { ok: false, why: w };
+    var R = RETAKE[r]; s.treasury -= 10; s.warDone = true;
+    var b = battle(s, R.front, R.who, 'retake-' + r, true);
+    if (R.who === 'russia') s.tension = Math.min(100, s.tension + (b.won ? 15 : 25));
+    if (R.who === 'egypt') { s.rel.GB = Math.max(0, s.rel.GB - 5); if (!s.egypt.independent) { s.egypt.loyalty = Math.max(0, s.egypt.loyalty - 25); if (!b.won) { s.egypt.independent = true; chron(s, 'Mehmed Ali bağlılığı bıraktı: Mısır fiilen bağımsız.'); } } }
+    if (R.who === 'greeks') { s.rel.GB = Math.max(0, s.rel.GB - 10); s.tension = Math.min(100, s.tension + 10); if (b.won) s.greek = 'retaken'; }
+    if (b.won) {
+      delete s.lost[r]; addTemp(s, 'win', R.n + ' geri alındı', 8, 0.35); s.rp = Math.min(15, s.rp + 2);
+      if (r === 'Suriye') s.egypt.syria = false; if (r === 'Girit') s.egypt.crete = false; if (r === 'Sirbistan') s.serbia = 'retaken';
+      if (R.who === 'egypt') s.egypt.men = Math.max(10, s.egypt.men - 10); if (R.who === 'russia') s.russia.men -= 8;
+      decide(s, R.n + ' için ' + R.foeE + ' karşı sefer açtın ve geri aldın'); chron(s, R.n + ' geri alındı.');
+      return { ok: true, result: { title: R.n + ' geri alındı', good: true, battle: b } };
+    }
+    addTemp(s, 'loss', R.n + ' seferi bozgunla bitti', -8, 0.35);
+    decide(s, R.n + ' için ' + R.foeE + ' karşı sefer açtın ve yenildin'); chron(s, R.n + ' seferi başarısız.');
+    return { ok: true, result: { title: R.n + ' seferi başarısız', good: false, battle: b } };
+  };
   // money and reform power buy time
   A.rushProjectCheck = function (s, id) { var pr = s.projects[id]; if (!pr || pr === 'done') return 'Yapılmıyor'; if (pr.yrs <= 1) return 'Zaten bu yıl bitiyor'; if (s.rushed[id]) return 'Bir kez hızlandırılır'; var c = Math.ceil(PROJ[id].cost / 2); if (!canAfford(s, c)) return 'Hazine yetmiyor (' + c + ' milyon kuruş)'; return null; };
   A.rushProject = function (s, id) { var w = A.rushProjectCheck(s, id); if (w) return { ok: false, why: w }; var c = Math.ceil(PROJ[id].cost / 2); s.treasury -= c; s.projects[id].yrs = 1; s.rushed[id] = true; decide(s, PROJ[id].n + ' için ek ödenek verdin (bu yıl bitecek)'); return { ok: true }; };
@@ -750,7 +801,7 @@ var M = (function () {
     var D = DIP[id]; if (!canAfford(s, D.cost)) return 'Hazine yetmiyor (' + D.cost + ' milyon kuruş)';
     if (id === 'guarantee') { if (s.guarantee) return 'Garanti alındı'; if (s.rel.GB < 60) return 'İngiltere en az 60 olmalı'; }
     if ((id === 'reward' || id === 'squeeze') && s.egypt.independent) return 'Mısır bağımsız';
-    if (id === 'serbia' && s.serbia !== 'ottoman') return 'Sırbistan zaten özerk';
+    if (id === 'serbia' && s.serbia === 'autonomous') return 'Sırbistan zaten özerk';
     return null;
   };
   A.dip = function (s, id) {
@@ -918,7 +969,7 @@ var M = (function () {
     var cap = recruitCap(s), n0 = s.nizam;
     if (s.nizamTarget > s.nizam) s.nizam = Math.min(s.nizamTarget, s.nizam + cap); else if (s.nizamTarget < s.nizam) s.nizam = s.nizamTarget;
     if (s.nizam !== n0) line('Nizam ordusu ' + n0 + ' → ' + s.nizam + ' bin' + (s.nizam < s.nizamTarget ? ' (yılda en fazla ' + cap + ' bin toplanabiliyor)' : '') + '.');
-    if (built(s, 'tufekhane')) { s.rifles += 6; }
+    if (built(s, 'tufekhane')) { s.rifles += 6 + 2 * instEff(s, 'si'); }
     if (s.pendingImport) { s.rifles += s.pendingImport; s.imported += s.pendingImport; line('Belçika tüfekleri geldi: +' + s.pendingImport + ' bin.'); s.pendingImport = 0; }
     // growth of the economy: the slow harvest of peace, farming and roads
     var gr = 0.002 + 0.002 * instEff(s, 'zi') + (built(s, 'sose') ? 0.001 : 0) + (built(s, 'ciftlik') ? 0.001 : 0) + (stab0 >= 50 ? 0.002 : 0) - (s.temp.some(function (t) { return t.id === 'wear'; }) ? 0.004 : 0);
@@ -971,7 +1022,7 @@ var M = (function () {
     // collapse
     if (stab1 < 15 && draw(s, 'coup') < (15 - stab1) / 12) { s.over = true; s.endReason = 'coup'; line('DARBE: istikrar çöktü, padişah tahttan indirildi.', 'bad'); }
     else if (stab1 < 15) line('Sarayda darbe fısıltıları: istikrar ' + stab1 + ' (darbe riski %' + Math.round((15 - stab1) / 12 * 100) + ').', 'bad');
-    s.dipDone = false; s.favorDone = false;
+    s.dipDone = false; s.favorDone = false; s.warDone = false;
     s.year++;
     if (s.year > END) { s.over = true; s.endReason = s.endReason || 'time'; }
     if (s.pendingWar && !s.over) { s.pendingWar = false; s.events = ['russia_continue']; } else s.events = s.over ? [] : genEvents(s);
@@ -1075,6 +1126,7 @@ var M = (function () {
     if (s.endReason === 'coup') title = 'Tahttan indirilen padişah';
     else if (fb.ratio >= 1.2 && fe.ratio >= 1.1 && dep < 30) title = "Doğu'nun Prusyası";
     else if (s.bankrupt || dep >= 50) title = 'Borçlu imparatorluk';
+    else if (fb.ratio >= 1 && !s.ocak && kept > regions - 3) title = 'Hasta adam ayağa kalktı';
     else if (s.egypt.independent && fe.ratio < 0.8) title = "Mısır'ın gölgesinde";
     else if (s.ocak) title = 'Yeniçerilerin esiri';
     else if (kept <= regions - 3) title = 'Dağılan imparatorluk';
@@ -1086,7 +1138,7 @@ var M = (function () {
   return { START: START, END: END, TECHS: TECHS, INST: INST, PROJ: PROJ, LAWS: LAWS, DIP: DIP, REGIONS: REGIONS, REGION_NAMES: REGION_NAMES,
     newGame: newGame, A: A, eventCard: eventCard, endYear: endYear, stabilityBreak: stabilityBreak, stability: stability, incomeBreak: incomeBreak,
     expenseBreak: expenseBreak, FAVOR: FAVOR, rpGainBreak: rpGainBreak, researchBreak: researchBreak, dependenceBreak: dependenceBreak, forecast: forecast,
-    capacity: capacity, building: building, recruitCap: recruitCap, preview: preview, previewEvent: previewEvent, sfx: sfx, goals: goals, path: path, stabilityCauses: stabilityCauses, metrics: metrics, available: available, coupRisk: function (s) { var st = stability(s); return st < 15 ? Math.min(1, (15 - st) / 12) : 0; }, foreignRate: foreignRate, verdict: verdict, egyptVsRebels: egyptVsRebels, nizamCost: nizamCost };
+    capacity: capacity, building: building, RETAKE: RETAKE, recruitCap: recruitCap, preview: preview, previewEvent: previewEvent, sfx: sfx, goals: goals, path: path, stabilityCauses: stabilityCauses, metrics: metrics, available: available, coupRisk: function (s) { var st = stability(s); return st < 15 ? Math.min(1, (15 - st) / 12) : 0; }, foreignRate: foreignRate, verdict: verdict, egyptVsRebels: egyptVsRebels, nizamCost: nizamCost };
 })();
 // ==MODEL END==
 if (typeof module !== 'undefined') module.exports = M;
@@ -1150,10 +1202,14 @@ if (typeof module !== 'undefined') module.exports = M;
     tazminat: ['Tazminat', 'Savaşı kaybedenin ödediği bedel.'],
     himaye: ['Himaye', 'Bir büyük gücün koruması; karşılığında söz hakkı ister.'],
     pasalik: ['Paşalık', 'Paşa unvanı ve yönetim yetkisi; burada Mehmed Ali\'ye verilen ek onur ve yetki.'],
-    nisan: ['Nişan', 'Devletin verdiği onur madalyası.']
+    nisan: ['Nişan', 'Devletin verdiği onur madalyası.'],
+    fetva: ['Fetva', 'Bir işin dine uygun olduğunu bildiren resmî görüş. Şeyhülislam\'ın fetvası, Ocak\'ın kaldırılmasını halkın ve Ulema\'nın gözünde meşru kılar.'],
+    seyhulislam: ['Şeyhülislam', 'Ulema\'nın başı; devletin en yüksek din görevlisi.'],
+    zaptiye: ['Zaptiye', 'Taşrada asayişi sağlayan düzenli kolluk; bugünkü jandarmanın atası.'],
+    tophane: ['Tophane', 'Top döküm ve topçu kışlası. Topçular 1826\'da Yeniçerilere karşı padişahın yanında durdu.']
   };
   // the word as it appears (stem), and the key it explains; longer first
-  var GL_WORDS = [['Vaka-i Hayriye', 'hayriye'], ['Mekteb-i Harbiye', 'harbiye'], ['Galata bankerleri', 'galata'], ['gümrük tavanı', 'tavan'], ['Gümrük tavanı', 'tavan'], ['reform gücü', 'reformgucu'], ['Reform gücü', 'reformgucu'], ['milyon kuruş', 'kurus'], ['Mehmed Ali', 'mehmedali'], ['İbrahim Paşa', 'ibrahim'], ['Eflak-Boğdan', 'eflak'],
+  var GL_WORDS = [['Şeyhülislam', 'seyhulislam'], ['fetva', 'fetva'], ['Fetva', 'fetva'], ['Zaptiye', 'zaptiye'], ['Tophane', 'tophane'], ['Vaka-i Hayriye', 'hayriye'], ['Mekteb-i Harbiye', 'harbiye'], ['Galata bankerleri', 'galata'], ['gümrük tavanı', 'tavan'], ['Gümrük tavanı', 'tavan'], ['reform gücü', 'reformgucu'], ['Reform gücü', 'reformgucu'], ['milyon kuruş', 'kurus'], ['Mehmed Ali', 'mehmedali'], ['İbrahim Paşa', 'ibrahim'], ['Eflak-Boğdan', 'eflak'],
     ['Yeniçeri', 'ocak'], ['Ocak', 'ocak'], ['Ocağ', 'ocak'], ['ulufe', 'ulufe'], ['Nizam', 'nizam'], ['iltizam', 'iltizam'], ['İltizam', 'iltizam'], ['Ayan', 'ayan'], ['ayan', 'ayan'], ['Ulema', 'ulema'], ['Kalemiye', 'kalemiye'], ['Divan', 'divan'], ['Redif', 'redif'], ['Rüşdiye', 'rusdiye'], ['Darülfünun', 'darulfunun'], ['Tophane', 'tophane'], ['Tüfekhane', 'tufekhane'], ['Feshane', 'feshane'], ['Baruthane', 'baruthane'], ['şose', 'sose'], ['Şose', 'sose'], ['Tanzimat', 'tanzimat'], ['Mora', 'mora'], ['haraç', 'harac'], ['Haraç', 'harac'], ['imtiyaz', 'imtiyaz'], ['İmtiyaz', 'imtiyaz'], ['bağımlılık', 'bagimlilik'], ['Bağımlılık', 'bagimlilik'], ['istikrar', 'istikrar'], ['İstikrar', 'istikrar'], ['Ziraat', 'ziraat'], ['Maarif', 'maarif'], ['tazminat', 'tazminat'], ['himaye', 'himaye'], ['paşalık', 'pasalik'], ['nişan', 'nisan']];
   var GL_RE = null;
   function glRe() {
@@ -1195,7 +1251,7 @@ if (typeof module !== 'undefined') module.exports = M;
     var st = M.stability(s), dep = M.dependenceBreak(s).total, inc = M.incomeBreak(s).total, exp = M.expenseBreak(s).total, net = inc - exp;
     var risk = M.coupRisk(s);
     function chip(id, label, val, sub, tone) { return '<button class="chip ' + (tone || '') + '" data-act="why" data-arg="' + id + '"><span class="chip-l">' + label + '</span><span class="chip-v">' + val + '</span><span class="chip-s">' + sub + '</span></button>'; }
-    return '<header class="top"><div class="brand"><span class="mark">Proje 1815</span><span class="sub">Kâğıt döngü · 2. sürüm</span></div>' +
+    return '<header class="top"><div class="brand"><span class="mark">Proje 1815</span><span class="sub">Kâğıt döngü · sürüm 2.1</span></div>' +
       '<div class="year"><span class="y">' + s.year + '</span><span class="ys">' + (M.END - s.year + 1) + ' yıl kaldı</span></div>' +
       '<div class="chips">' +
       chip('hazine', 'Hazine', fmt(s.treasury, 0), 'milyon kuruş · yılda ' + sg(net, 0), s.treasury < 0 ? 'bad' : '') +
@@ -1296,13 +1352,13 @@ if (typeof module !== 'undefined') module.exports = M;
       var extra = '';
       if (id === 'ocak' && s.ocak) {
         var ch = M.A.ocakChance(s);
-        extra = '<div class="odds"><b>Başarı ihtimali ' + pct(ch.p) + '</b>' + ch.lines.map(function (l) { return '<span>' + esc(l.n) + ' ' + (l.v >= 0 ? '+' : '−') + Math.abs(Math.round(l.v * 100)) + '</span>'; }).join('') + '</div>' + ocakPreview();
+        extra = '<div class="odds"><b>Başarı ihtimali ' + pct(ch.p) + '</b>' + ch.lines.map(function (l) { var v = Math.round(l.v * 100); return '<span>' + esc(l.n) + ' ' + (v > 0 ? '+' + v : (v < 0 ? '−' + (-v) : '0')) + '</span>'; }).join('') + '</div>' + ocakPreview() + (function () { var fw = M.A.fetvaCheck(s); return '<div class="actions tight">' + btn('fetva', s.fetva ? 'Fetva hazır <small>ihtimal +10 puan</small>' : 'Şeyhülislam\'dan fetva al <small>2 reform gücü · ihtimal +10 puan</small>', { disabled: !!fw }) + '</div>' + (s.fetva ? '' : why(fw || '')); })();
       } else if (!done) extra = prev(function (b) { var r = M.A.law(b, id); return r; }, 'Yerleşince');
       out += '<article class="card law' + (done ? ' done' : '') + '"><h4>' + esc(Lw.n) + (done ? ' <span class="pill good">Uygulandı</span>' : '') + '</h4><p class="subt">' + gloss(Lw.sub) + '</p><p>' + gloss(Lw.desc) + '</p>' + extra +
         (done ? '' : '<div class="meta">' + Lw.rp + ' reform gücü' + (Lw.req ? ' · bilgi: ' + esc(M.TECHS[Lw.req].n) : '') + '</div>' + btn('law', 'Uygula', { arg: id, disabled: !!w }) + why(w)) + '</article>';
     });
     var fw = M.A.favorCheck(s);
-    out += '</div><h3>Gönül al <small>yılda bir kez</small></h3><div class="actions">' + btn('favor', 'Bahşiş ve nişan dağıt <small>6 milyon kuruş · istikrar +5, her yıl azalarak' + (fw ? ' · ' + esc(fw) : '') + '</small>' + (fw ? '' : prev(M.A.favor)), { disabled: !!fw }) + '</div>';
+    out += '</div><h3>Gönül al <small>yılda bir kez</small></h3><div class="actions">' + btn('favor', 'Bahşiş ve nişan dağıt <small>6 milyon kuruş · istikrar +6, her yıl azalarak' + (fw ? ' · ' + esc(fw) : '') + '</small>' + (fw ? '' : prev(M.A.favor)), { disabled: !!fw }) + '</div>';
     return out + '</section>';
   }
   function bar(v, max, mark, cls) { return '<span class="hbar ' + (cls || '') + '"><i style="width:' + Math.max(0, Math.min(100, 100 * v / max)) + '%"></i>' + (mark ? '<b style="left:' + (100 * mark / max) + '%"></b>' : '') + '</span>'; }
@@ -1337,11 +1393,25 @@ if (typeof module !== 'undefined') module.exports = M;
       '<div class="stepper">' + btn('nizam', '−5', { arg: -5, cls: 'btn sq' }) + '<span><b>' + s.nizamTarget + '</b> bin hedef<br><small>şu an ' + s.nizam + ' bin · yılda en çok ' + cap + ' bin toplanır</small></span>' + btn('nizam', '+5', { arg: 5, cls: 'btn sq' }) + '</div>' + up +
       '<p class="note">' + gloss('Hedefe ulaşınca yıllık maliyet ' + fmt(s.nizamTarget * M.nizamCost(s), 1) + ' milyon kuruş.' + (s.ocak ? ' Ocak varken Nizam büyüdükçe Yeniçeriler kızar.' : '')) + '</p></div>' +
       '<div><h3>Kuvvetler</h3><table class="t"><tr><td>' + gloss('Yeniçeriler') + why(s.ocak ? 'kâğıtta 60 bin, sahada yaklaşık 42 bin; talimsiz' : 'Ocak kaldırıldı') + '</td><td class="num">' + (s.ocak ? '60 bin' : '–') + '</td></tr>' +
-      '<tr><td>Nizam askeri</td><td class="num">' + s.nizam + ' bin</td></tr><tr><td>Modern tüfek stoku' + why((s.projects.tufekhane === 'done' ? 'Tüfekhane yılda +6 bin' : 'Tüfekhane yok') + (s.imported ? ' · ' + s.imported + ' bin ithal' : '')) + '</td><td class="num">' + fmt(s.rifles) + ' bin</td></tr></table></div></div>' +
+      '<tr><td>Nizam askeri</td><td class="num">' + s.nizam + ' bin</td></tr><tr><td>Modern tüfek stoku' + why((s.projects.tufekhane === 'done' ? 'Tüfekhane yılda +' + (6 + 2 * s.inst.si.lvl) + ' bin' + (s.inst.si.lvl ? ' (sanayi teşviki dahil)' : '') : 'Tüfekhane yok') + (s.imported ? ' · ' + s.imported + ' bin ithal' : '')) + '</td><td class="num">' + fmt(s.rifles) + ' bin</td></tr></table></div></div>' +
       '<h3>"Bugün savaşsaydık"</h3><div class="row2"><div class="fcbox"><h4>Balkan: Rusya\'ya karşı ' + fcPill(fb) + '</h4>' + fcTable(fb) + '<p class="note">En geride olduğun etken: <b>' + esc(fb.weakest) + '</b>.</p></div>' +
       '<div class="fcbox"><h4>Suriye: Mısır\'a karşı ' + fcPill(fe) + '</h4>' + fcTable(fe) + '<p class="note">En geride olduğun etken: <b>' + esc(fe.weakest) + '</b>.</p></div></div>' +
-      '<p class="note">Kazanma ihtimali iki tarafın gücünden gelir; aralık, üçüncü devletlerin tavrındaki belirsizliktir. Her muharebe tüfek stokunun dörtte birini tüketir.</p></section>';
+      '<p class="note">Kazanma ihtimali iki tarafın gücünden gelir; aralık, üçüncü devletlerin tavrındaki belirsizliktir. Her muharebe tüfek stokunun dörtte birini tüketir.</p>' + retakeBox() + '</section>';
     return out;
+  }
+  function retakeBox() {
+    var lost = Object.keys(M.RETAKE).filter(function (r) { return s.lost[r]; });
+    var head = '<h3>Kayıp toprakları geri al</h3>';
+    if (!lost.length) return head + '<p class="note">Kaybedilmiş bir eyaletin yok.</p>';
+    var EFF = { egypt: 'İngiltere ilişkisi −5.' + (s.egypt.independent ? '' : ' Mısır bağlılığı −25; yenilirsen Mehmed Ali bağımsızlığını ilan eder.'), greeks: 'İngiltere ilişkisi −10, Rus gerginliği +10.', russia: 'Rus gerginliği +15 (yenilirsen +25).' };
+    var AFTER = { Suriye: s.egypt.independent ? 'Mehmed Ali bağımsız kalır; haraç geri gelmez.' : '', Sirbistan: 'Sırbistan yeniden doğrudan yönetime geçer.', Eflak: 'Prenslikler yeniden Osmanlı\'ya bağlanır.', Mora: '', Girit: '' };
+    var HOLD = { 'özerk': 'özerk prenslik, Rus etkisinde', 'Rus himayesi': 'Rus himayesinde', 'Mısır': 'Mehmed Ali\'nin elinde', 'özerk Yunanistan': 'özerk Yunan devleti' };
+    return head + '<p class="note">Yılda bir sefer açabilirsin. Sefer hazinesi 10 milyon kuruş. Kazanırsan eyalet ve geliri geri gelir, istikrar +8 (geçici), reform gücü +2. Yenilirsen istikrar −8 (geçici). Her muharebe asker kaybettirir, savaş yorgunluğu getirir ve tüfeklerin dörtte birini tüketir.</p><div class="retake">' +
+      lost.map(function (r) {
+        var R = M.RETAKE[r], fc = M.A.retakeForecast(s, r), no = M.A.retakeCheck(s, r);
+        return '<div class="fcbox"><h4>' + esc(R.n) + ' · ' + esc(R.foeE) + ' karşı ' + fcPill(fc) + '</h4><p class="note">Şu an: ' + esc(HOLD[s.lost[r]] || s.lost[r]) + '. ' + esc(EFF[R.who]) + (AFTER[r] ? ' ' + esc(AFTER[r]) : '') + ' En geride olduğun etken: <b>' + esc(fc.weakest) + '</b>.</p>' +
+          btn('retake', no ? esc(no) : 'Sefer aç · 10 milyon kuruş', { arg: r, cls: 'btn' + (no ? '' : ' primary'), disabled: !!no }) + '</div>';
+      }).join('') + '</div>';
   }
   function side() {
     var fb = M.forecast(s, 'balkan', 'russia'), fe = M.forecast(s, 'syria', 'egypt'), G = M.goals(s), P = M.path(s), nextDone = false;
@@ -1364,7 +1434,7 @@ if (typeof module !== 'undefined') module.exports = M;
     if (id === 'borc') { title = 'Borç: neden?'; body = table([{ n: 'İç borç (Galata bankerleri)', v: s.D, why: 'faiz %8, tavan 40' }, { n: 'Dış borç (Londra)', v: s.F, why: 'faiz %' + fmt(M.foreignRate(s), 1) + '; istikrar, borç ve Tanzimat belirler' }]) + (s.bankrupt ? '<p class="note bad">İflas edildi: alacaklılar gelirin bir kısmını alıyor.</p>' : ''); }
     if (id === 'istikrar') {
       var c = M.stabilityCauses(s), tot = M.stability(s); title = 'İstikrar ' + tot + ': neden?';
-      body = '<table class="t"><tr><td>Taban</td><td class="num">50</td></tr>' + c.map(function (x) { return '<tr><td>' + gloss(x.n) + (x.temp ? why('geçici, her yıl azalır') : '') + '</td><td class="num">' + sg(x.v) + '</td></tr>'; }).join('') + '</table><p class="note">' + gloss('İstikrar 15\'in altına inerse her yıl sonunda darbe riski doğar. Düşük istikrar reform gücünü ve dolaylı vergileri azaltır.') + '</p>';
+      body = '<table class="t"><tr><td>Taban</td><td class="num">50</td></tr>' + c.map(function (x) { return '<tr><td>' + gloss(x.n) + (x.temp ? why('geçici, her yıl azalır') : '') + '</td><td class="num">' + sg(x.v) + '</td></tr>'; }).join('') + '</table><p class="note">' + gloss('İstikrar 15\'in altına inerse her yıl sonunda darbe riski doğar. Düşük istikrar reform gücünü ve dolaylı vergileri azaltır. İstikrarı kalıcı artıranlar: Ocak\'ın kaldırılması, Zaptiye teşkilatı, Sanayi teşviki, Ziraat ıslahı, Tanzimat, düşük vergi. Geçici artıranlar: bahşiş ve nişan, zaferler.') + '</p>';
     }
     if (id === 'reform') { title = 'Reform gücü: neden?'; body = '<p>' + gloss(GLOSS.reformgucu[1]) + '</p>' + table(M.rpGainBreak(s).lines) + '<p class="note">Zaferler ve başarılı büyük reformlar ek reform gücü verir.</p>'; }
     if (id === 'bagimlilik') { var db = M.dependenceBreak(s); title = 'Bağımlılık ' + db.total + ': neden?'; body = db.lines.length ? table(db.lines) : '<p>Henüz yabancı bir güce bağlı değilsin.</p>'; body += '<p class="note">' + gloss(GLOSS.bagimlilik[1]) + '</p>'; }
@@ -1446,16 +1516,18 @@ if (typeof module !== 'undefined') module.exports = M;
       '<p class="note">Tarihin Hükmü\'nün deneme sürümü: yedi alan ayrı ayrı tartılır, tek skor yoktur.</p>' +
       '<div class="areas">' + v.areas.map(function (a) { return '<div class="area"><span>' + esc(a.n) + '</span>' + bar(a.v, 100) + '<b>' + a.v + '</b>' + why(a.why) + '</div>'; }).join('') + '</div>' + spark() + '</div>' +
       '<div class="paper-sheet survey"><h2>Üç kararın</h2><p>Aşağıdan en önemli bulduğun <b>üç kararı</b> seç ve her birinin nedenini bir iki cümleyle yaz.</p><div class="decs">' + (dec || '<p>Hiç karar kaydedilmedi.</p>') + '</div>' +
-      '<p class="count">' + n + ' / 3 seçildi</p>' +
+      '<p class="count">' + countText() + '</p>' +
       '<h2>Devam etmek ister miydin?</h2><div class="seg wide">' + ['Evet', 'Belki', 'Hayır'].map(function (x) { return '<button class="' + (ui.cont === x ? 'on' : '') + '" data-act="cont" data-arg="' + x + '">' + x + '</button>'; }).join('') + '</div>' +
       '<textarea id="contwhy" placeholder="Neden? Seni ne çekti ya da ne sıktı?">' + esc(ui.contWhy || '') + '</textarea>' +
       '<textarea id="note" placeholder="İstersen: anlamadığın ya da değiştirmek istediğin bir şey">' + esc(ui.note || '') + '</textarea>' +
-      '<div class="actions">' + btn('submit', 'Sonucu gönder', { cls: 'btn primary big', disabled: n !== 3 || !ui.cont }) + btn('again', 'Yeniden oyna', { cls: 'btn ghost' }) + '</div>' +
+      '<div class="actions">' + btn('submit', 'Sonucu gönder', { cls: 'btn primary big', disabled: !surveyReady() }) + btn('again', 'Yeniden oyna', { cls: 'btn ghost' }) + '</div>' +
       (sent ? '<div class="sent"><p>' + esc(sent.msg) + '</p><textarea id="outtext" readonly>' + esc(sent.text) + '</textarea>' + btn('copy', 'Metni kopyala', { cls: 'btn' }) + '</div>' : '') + '</div></main>';
   }
+  function countText() { var n = Object.keys(ui.picks || {}).length; var p = ui.picks || {}, missing = Object.keys(p).some(function (i) { return !(p[i] || '').trim(); }); return n + ' / 3 seçildi' + (n === 3 && missing ? ' · her kararın nedenini yaz' : (n === 3 && !ui.cont ? ' · devam etmek ister miydin, seç' : '')); }
+  function surveyReady() { var p = ui.picks || {}, k = Object.keys(p); return k.length === 3 && k.every(function (i) { return (p[i] || '').trim().length > 0; }) && !!ui.cont; }
   function resultText() {
     var v = M.verdict(s), picks = ui.picks || {}, mins = Math.max(1, Math.round((Date.now() - s.started) / 60000));
-    var t = 'Proje 1815 · Kâğıt döngü 2. sürüm sonucu\nOyuncu: ' + (ui.name || 'isimsiz') + ' · Tohum ' + s.seed + ' · ' + mins + ' dk · Bitiş ' + (s.year - 1) + (s.endReason === 'coup' ? ' (darbe)' : '') + '\nHüküm: ' + v.title + '\n';
+    var t = 'Proje 1815 · Kâğıt döngü sürüm 2.1 sonucu\nOyuncu: ' + (ui.name || 'isimsiz') + ' · Tohum ' + s.seed + ' · ' + mins + ' dk · Bitiş ' + (s.year - 1) + (s.endReason === 'coup' ? ' (darbe)' : '') + '\nHüküm: ' + v.title + '\n';
     t += 'Hedefler: ' + M.goals(s).map(function (g) { return g.n + ' ' + Math.round(g.v * 100) + '%'; }).join(' · ') + '\n';
     t += v.areas.map(function (a) { return a.n + ' ' + a.v; }).join(' · ') + '\n\nÜç karar:\n';
     Object.keys(picks).forEach(function (i, k) { var d = s.decisions[i]; t += (k + 1) + ') ' + d.y + ' · ' + d.t + '\n   Neden: ' + (picks[i] || '—') + '\n'; });
@@ -1466,7 +1538,7 @@ if (typeof module !== 'undefined') module.exports = M;
   function submit() {
     var text = resultText();
     ui.sent = { msg: 'Kaydediliyor…', text: text }; render();
-    var rec = { v: 2, name: ui.name || '', seed: s.seed, endYear: s.year - 1, endReason: s.endReason, verdict: M.verdict(s), goals: M.goals(s), picks: Object.keys(ui.picks).map(function (i) { return { y: s.decisions[i].y, t: s.decisions[i].t, why: ui.picks[i] || '' }; }),
+    var rec = { v: 2, ver: '2.1', name: ui.name || '', seed: s.seed, endYear: s.year - 1, endReason: s.endReason, verdict: M.verdict(s), goals: M.goals(s), picks: Object.keys(ui.picks).map(function (i) { return { y: s.decisions[i].y, t: s.decisions[i].t, why: ui.picks[i] || '' }; }),
       cont: ui.cont, contWhy: ui.contWhy || '', note: ui.note || '', minutes: Math.max(1, Math.round((Date.now() - s.started) / 60000)), decisions: s.decisions, history: s.history, at: new Date().toISOString() };
     var done = false;
     function fallback() { if (done) return; done = true; ui.sent = { msg: 'Bu sayfa sonucu otomatik kaydedemedi. Aşağıdaki metni kopyalayıp Tolga\'ya gönder.', text: text }; render(); }
@@ -1532,7 +1604,9 @@ if (typeof module !== 'undefined') module.exports = M;
       case 'rushI': r = M.A.rushInst(s, arg); break;
       case 'lower': r = M.A.lower(s, arg); break;
       case 'law': r = M.A.law(s, arg); if (r && r.result) { ui.result = r.result; ui.view = 'result'; } break;
+      case 'retake': r = M.A.retake(s, arg); if (r && r.result) { ui.result = r.result; ui.view = 'result'; } break;
       case 'favor': r = M.A.favor(s); break;
+      case 'fetva': r = M.A.fetva(s); break;
       case 'dip': r = M.A.dip(s, arg); break;
       case 'nizam': M.A.setNizam(s, s.nizamTarget + (+arg)); break;
       case 'end': endTheYear(); break;
@@ -1583,7 +1657,7 @@ if (typeof module !== 'undefined') module.exports = M;
     var t = e.target;
     if (t.classList.contains('reason')) ui.picks[t.dataset.arg] = t.value;
     if (t.id === 'contwhy') ui.contWhy = t.value; if (t.id === 'note') ui.note = t.value; if (t.id === 'pname') ui.name = t.value;
-    var sb = document.querySelector('[data-act=submit]'); if (sb) sb.disabled = Object.keys(ui.picks || {}).length !== 3 || !ui.cont;
+    var sb = document.querySelector('[data-act=submit]'); if (sb) sb.disabled = !surveyReady(); var ct = document.querySelector('.survey .count'); if (ct) ct.textContent = countText();
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && (ui.why || ui.term)) { if (ui.term) ui.term = null; else ui.why = null; render(); } });
 
