@@ -219,6 +219,11 @@ b { font-weight: 700; }
 .rep li::before { content: ""; position: absolute; left: 0; top: .55em; width: 6px; height: 6px; background: var(--brass-dim); transform: rotate(45deg); }
 .rep li.good::before { background: var(--good); } .rep li.bad::before { background: var(--bad); } .rep li.rival::before { background: var(--eg); }
 .rep li.bad { color: #f0b7a8; } .rep li.rival { color: var(--muted); font-style: italic; }
+.rkwhy { border-left: 3px solid var(--brass, #b08d57); background: var(--panel2); padding: 8px 10px; margin: 0 0 12px; border-radius: 0 4px 4px 0; }
+.rkwhy > b { display: block; font: 600 .82rem var(--f-ui); color: var(--muted); margin-bottom: 4px; letter-spacing: .02em; }
+.modal.paper .rkwhy, .paper-sheet .rkwhy { background: var(--paper2); border-left-color: #5a2c1e; }
+.t tr.near td { background: color-mix(in srgb, var(--warn) 10%, transparent); }
+.note.nb .warnnote { display: block; margin-top: 4px; color: var(--warn); }
 .toast { position: fixed; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--paper); color: var(--ink); padding: 8px 16px; border-radius: 4px; z-index: 40; box-shadow: 0 6px 24px rgba(0,0,0,.5); font-size: .92rem; max-width: calc(100% - 32px); }
 
 /* intro and end */
@@ -464,7 +469,7 @@ textarea.sv { min-height: 76px; margin-top: 4px; } textarea.sv.short { min-heigh
 // Proje 1815 · S6 paper loop · game model (pure, deterministic: same seed, same choices, same game)
 var M = (function () {
   'use strict';
-  var START = 1816, END1 = 1840, END2 = 1860, END3 = 1880, END4 = 1913, VERSION = '4.0', MAXL = 4;
+  var START = 1816, END1 = 1840, END2 = 1860, END3 = 1880, END4 = 1913, VERSION = '4.1', MAXL = 4;
   var ENDS = [END1, END2, END3, END4];
   function maxL(s) { return s.era >= 4 ? 6 : (s.era >= 3 ? 5 : MAXL); } // 4.0: institutions open a 5th level in 1861 and a 6th in 1881
 
@@ -772,6 +777,19 @@ var M = (function () {
     jandarmab: { n: 'Jandarma bölükleri', step: 'bölük', cost: 16, grow: 0.3, rp: 1, up: 1, from: 1880, reqLaw: 'vilayet2', fx: { unr: -1.5 }, what: 'Kazalara jandarma bölüğü: ilk bölük her eyalette huzursuzluğu 1,5 puan düşürür.' }
   };
   for (var x4 in X4) EXT[x4] = X4[x4];
+  // 4.1: the second industrial wave (steel, electricity, chemistry, oil). One repeatable work per area, from 1881; each step's
+  // return falls with the steps already built but never reaches zero, and rises with the year and with the wave's technologies.
+  var X41 = {
+    celiksan: { n: 'Çelik ve elektrik sanayii', step: 'fabrika', cost: 36, grow: 0.12, rp: 0, up: 2, from: 1881, reqTech: 'bessemer', reqInst: ['si', 4], acc: true, techs: ['elektrik', 'kimya2', 'petrol'], dep: 0.5, depOff: 'tesvik', fx: { indu: 5.5, inc: 2 },
+      what: 'Çelikhane, makine ve elektrik fabrikası: ilk adım sanayi endeksine 2,5 puan ve yılda 2 milyon kuruş verir. Bedeli: yabancı makine ve sermaye, her adım bağımlılık +0,5 (Teşvik-i Sanayi Kanunu ile yok).' },
+    sirket: { n: 'Anonim şirketler ve kredi', step: 'şirket', cost: 30, grow: 0.12, rp: 1, up: 2, from: 1886, reqTech: 'kooperatif', acc: true, techs: ['demiryolu3', 'istatistik2', 'telsiz'], dep: 0.3, fx: { econ: 3.5, inc: 3 },
+      what: 'Ticaret odası, banka şubesi, anonim şirket: ilk adım ekonomi endeksine 1,5 puan ve yılda 3 milyon kuruş verir. Bedeli: reform gücü (her iki adımda bir fazla) ve alacaklıların nüfuzu, her adım bağımlılık +0,3.' },
+    topcu: { n: 'Topçu alayları ve mühimmat', step: 'alay', cost: 32, grow: 0.12, rp: 0, up: 3, from: 1886, reqTech: 'dumansiz', acc: true, techs: ['seriates', 'makineli', 'motor'], fx: { eq: 0.055 },
+      what: 'Yeni sahra ve ağır topçu alayı, mühimmat depoları: ilk adım bütün ordunun teçhizatını %2,5 iyileştirir. Bedeli: bakım yılda 3; ordun güçlendikçe Rusya ve Avusturya da silahlanır.' },
+    us: { n: 'Deniz üsleri ve ikmal', step: 'üs', cost: 30, grow: 0.12, rp: 0, up: 2, from: 1890, reqTech: 'celikgemi', acc: true, techs: ['dretnot', 'petrol', 'telsiz'], fx: { navy: 21 },
+      what: 'Kömür ve petrol depoları, havuzlar, telsizli üsler: ilk adım donanmanın etkili gücüne 8 puan ekler (gemiler denizde kalır). Bedeli: İngiltere ve İtalya her adımda −1; büyük güçler kuşkulanır.' }
+  };
+  for (var x41 in X41) EXT[x41] = X41[x41];
   var L4 = {
     vilayet2: { n: 'Vilayet Kanunu', sub: '1864 ve 1871: bütün ülkeye yeni taşra düzeni', rp: 6, from: 1864, reqLaw: 'vilayet', delay: 2, fx: { unr: -4, eff: 0.02, stab: { aya: -2, kal: 2 } }, desc: 'Vilayet, sancak, kaza ve nahiye; seçimli meclisler: huzursuzluk her yerde 4 puan azalır, vergi payı 2 puan artar (iki yıl sonra). Ayanlar −2, Kalemiye +2. Önce Vilayet Nizamnamesi.' },
     maarifnizam: { n: 'Maarif-i Umumiye Nizamnamesi', sub: '1869: herkese mektep', rp: 6, from: 1869, req: 'pedagoji', delay: 1, fx: { res: 1, sci: 3, stab: { ule: -3 } }, desc: 'İptidai, rüşdiye, idadi ve sultani basamakları: araştırma yılda +1, bilim endeksine 3 puan; İptidai mektepler açılabilir. Ulema −3.' },
@@ -795,7 +813,7 @@ var M = (function () {
   function newGame(seed, diff, start) {
     if (start && start !== START && STARTS[start]) return startFrom(seed, diff, start);
     var s = {
-      v: 40, seed: String(seed), start: START, prest: 45, prestB: 0, diff: DIFF[diff] ? diff : 'normal', era: 1, year: START, treasury: 30, growth: 1, D: 0, F: 0, rateExtra: 0,
+      v: 41, seed: String(seed), start: START, prest: 45, prestB: 0, diff: DIFF[diff] ? diff : 'normal', era: 1, year: START, treasury: 30, growth: 1, D: 0, F: 0, rateExtra: 0,
       tax: 1, trade: 'protect', treaty: false, bankrupt: false,
       lost: {}, // region -> who took it
       jan: 60, ocak: true, ocakRetry: START, nizam: 0, nizamTarget: 0, rifles: 0, imported: 0,
@@ -1051,7 +1069,7 @@ var M = (function () {
     if (big > 0) L.push({ n: 'Büyük ordunun iaşesi', v: big, why: b1 + ' binin üstündeki her bin asker yılda 0,2, ' + b2 + ' binin üstündeki 0,4 milyon kuruş fazla tutar' });
     if (s.navy) L.push({ n: 'Donanma', v: navyUpkeep(s), why: Math.round(navyTons(s)) + ' bin ton gemi; bin tonu yılda 0,08' }); else L.push({ n: 'Donanma', v: 6, why: 'Kalyon filosu' });
     if (s.pconc) Object.keys(s.pconc).forEach(function (pc) { if (s.pconc[pc] && PROJ[pc].conc.g) L.push({ n: 'Kilometre garantisi: ' + PROJ[pc].n, v: PROJ[pc].conc.g, why: PROJ[pc].conc.who + ' hattı yaptı; devlet her yıl gelir garantisi öder' }); });
-    if (s.split && lateY(s) > 0) { var inc0 = incomeBreak(s).total, gd = r1(Math.max(0, inc0) * 0.08 * Math.min(1, lateY(s) / 30)); if (gd) L.push({ n: 'Büyüyen devlet', v: gd, why: 'memur, posta, okul, hastane ve belediye: devletin işi gelirle birlikte büyür (gelirin %' + Math.round(8 * Math.min(1, lateY(s) / 30)) + sfx(Math.round(8 * Math.min(1, lateY(s) / 30)), 'i') + ')' }); }
+    if (s.split && lateY(s) > 0) { var inc0 = incomeBreak(s).total, gsh = growShare(s, inc0), gd = r1(Math.max(0, inc0) * gsh), gp = Math.round(gsh * 100); if (gd) L.push({ n: 'Büyüyen devlet', v: gd, why: 'memur, posta, okul, hastane ve belediye: devletin işi gelirle birlikte büyür (gelirin %' + gp + sfx(gp, 'i') + (s.year > END3 && inc0 > GROW_BASE ? '; gelir ' + GROW_BASE + ' milyon kuruşu her ikiye katlayışında ' + Math.round(GROW_STEP * 100) + ' puan daha' : '') + ')' }); }
     L.push({ n: 'İdare', v: knows(s, 'idare') ? 12 : 14, why: 'Vilayet ve kalem' + (knows(s, 'idare') ? ' (mülkî idare usulüyle 2 eksik)' : '') });
     L.push({ n: 'Saray', v: s.palaceCut ? 7 : 10, why: s.palaceCut ? 'Saray masrafı kısıldı' : 'Saray ve hanedan' });
     if (s.war) L.push({ n: 'Sefer masrafı', v: 14, why: 'Rusya ile savaş sürüyor' });
@@ -1119,6 +1137,7 @@ var M = (function () {
       if (s.pconc) Object.keys(s.pconc).forEach(function (pc) { if (s.pconc[pc]) L.push({ n: 'İmtiyaz: ' + PROJ[pc].n, v: PROJ[pc].conc.dep }); });
       if (s.dui) L.push({ n: 'Düyun-ı Umumiye', v: 15 });
       var fd = fxv(fxAll(s), 'dep'); if (fd) L.push({ n: fxNames(fxAll(s), 'dep'), v: Math.round(fd) });
+      Object.keys(X41).forEach(function (id) { var X = X41[id], n = extN(s, id); if (X.dep && n && !(X.depOff && s.laws[X.depOff] && !s.laws[X.depOff].wait)) { var dv = Math.round(X.dep * n); if (dv) L.push({ n: X.n + ' (' + n + ' ' + X.step + ')', v: dv }); } });
     }
     var tot = 0; L.forEach(function (l) { tot += l.v; }); return { total: clamp(tot, 0, 100), lines: L };
   }
@@ -1313,12 +1332,13 @@ var M = (function () {
 
   // ---------- 4.0: the effects of the new items, added up in one place ----------
   var FX_LIST = [];
-  (function () { var k; for (k in T4) FX_LIST.push(['t', k, T4[k]]); for (k in P4) FX_LIST.push(['p', k, P4[k]]); for (k in L4) FX_LIST.push(['l', k, L4[k]]); for (k in X4) FX_LIST.push(['x', k, X4[k]]); })();
+  (function () { var k; for (k in T4) FX_LIST.push(['t', k, T4[k]]); for (k in P4) FX_LIST.push(['p', k, P4[k]]); for (k in L4) FX_LIST.push(['l', k, L4[k]]); for (k in X4) FX_LIST.push(['x', k, X4[k]]); for (k in X41) FX_LIST.push(['x', k, X41[k]]); })();
   function fxMult(s, it) {
     var id = it[1];
     if (it[0] === 't') return s.known[id] ? 1 : 0;
     if (it[0] === 'p') return built(s, id) ? 1 : 0;
     if (it[0] === 'l') { var L = s.laws[id]; return L && !L.wait ? 1 : 0; }
+    if (it[2].acc) return (s.xv && s.xv[id]) || 0; // 4.1: the second wave's steps, each counted at its own year's productivity
     var n = extN(s, id); return n ? (1 - Math.pow(EXT_DECAY, n)) / (1 - EXT_DECAY) : 0;
   }
   var FXC = typeof WeakMap === 'function' ? new WeakMap() : null;
@@ -1344,6 +1364,16 @@ var M = (function () {
   function fxv(o, k) { return o[k] || 0; }
   function fxNames(o, k) { return (o.src[k] || []).map(function (x) { return x[0]; }).join(', '); }
   function lateY(s) { return s.split ? Math.max(0, s.year - 1860) : 0; } // years into the new eras; 0 until 1861 opens them
+  // 4.1: from 1881 there is no growth wall: growth above 1,2 % a year counts half. Size pays for itself instead:
+  // "Büyüyen devlet" takes 8 % of income plus GROW_STEP for every doubling of income above GROW_BASE.
+  var SOFT_G = 0.012, GROW_BASE = 400, GROW_STEP = 0.03;
+  function softGrowth(g) { return g > SOFT_G ? SOFT_G + 0.5 * (g - SOFT_G) : g; }
+  function growShare(s, inc) { var b = 0.08 * Math.min(1, lateY(s) / 30); if (s.year > END3 && inc > GROW_BASE) b += GROW_STEP * Math.log(inc / GROW_BASE) / Math.LN2; return b; }
+  // 4.1: the second wave's works. A step adds the first step's effect × the productivity of its year ÷ (1 + ACC_K × steps already built)
+  var ACC_K = 0.12;
+  function accProd(s, id) { var X = EXT[id], p = 1 + 0.03 * Math.max(0, s.year - END3); (X.techs || []).forEach(function (t) { if (knows(s, t)) p += 0.15; }); return p; }
+  function accStep(s, id, n) { return accProd(s, id) / (1 + ACC_K * n); }
+  function extDone(s, id) { var n = extN(s, id); if (EXT[id].acc) { s.xv = s.xv || {}; s.xv[id] = Math.round(((s.xv[id] || 0) + accStep(s, id, n)) * 1000) / 1000; } s.ext[id] = n + 1; }
 
   // ---------- 4.0: decay of neglected institutions ----------
   function instFactor(s, id) {
@@ -1374,7 +1404,7 @@ var M = (function () {
   }
   function navyEff(s) {
     if (!s.navy) return Math.max(10, 40 + (built(s, 'tersane') ? 6 : 0) + (built(s, 'filo') ? 12 : 0) - (s.navarino ? 12 : 0)); // before 1861: the sailing fleet
-    var t = 0; for (var g in s.navy) t += s.navy[g] * genW(g, s.year); return r1(t);
+    var t = 0; for (var g in s.navy) t += s.navy[g] * genW(g, s.year); return r1(t + fxv(fxAll(s), 'navy'));
   }
   function navyTons(s) { if (!s.navy) return 0; var t = 0; for (var g in s.navy) t += s.navy[g]; return t; }
   function navyCost(s, id) { return Math.round(NAVY[id].cost * (1 - fxv(fxAll(s), 'navyc'))); }
@@ -1394,7 +1424,7 @@ var M = (function () {
   };
   function scrapList(s) { var L = []; if (!s.navy) return L; if ((s.navy.sail || 0) >= 1 && s.year > 1860) L.push('sail'); if ((s.navy.iron || 0) >= 1 && s.year >= 1906) L.push('iron'); if ((s.navy.steel || 0) >= 1 && s.year >= 1912) L.push('steel'); return L; } // a generation can be retired once a newer one has made it count for little
   A.scrapCheck = function (s) { if (!s.navy) return '1861\'den itibaren'; if (!scrapList(s).length) return 'Hizmetten çıkarılacak eski gemi yok'; return null; };
-  A.scrap = function (s) { var w = A.scrapCheck(s); if (w) return { ok: false, why: w }; var n = 0; scrapList(s).forEach(function (g) { n += s.navy[g]; s.navy[g] = 0; }); decide(s, 'Eski gemileri hizmetten çıkardın (' + Math.round(n) + ' bin ton)'); return { ok: true }; };
+  A.scrap = function (s) { var w = A.scrapCheck(s); if (w) return { ok: false, why: w }; var n = 0, v0 = navyEff(s); scrapList(s).forEach(function (g) { n += s.navy[g]; s.navy[g] = 0; }); s.scrapped = { y: s.year, t: r1(n), v: r1(v0 - navyEff(s)) }; decide(s, 'Eski gemileri hizmetten çıkardın (' + Math.round(n) + ' bin ton)'); return { ok: true }; };
   function navyUpkeep(s) { return r1(4 + 0.08 * navyTons(s)); }
   function navyDep(s) { return Math.min(10, (s.navyF || []).filter(function (y) { return s.year - y < 15; }).length); }
 
@@ -1428,13 +1458,17 @@ var M = (function () {
   var VAR = { FR: 0.5, RU: 0.5, AT: 0.4, IT: 0.36, JP: 0.4, ES: 0.2, GB: 0.16, DE: 0.24, US: 0.2 }; // how much a rival's late path varies from game to game, all its areas together (inner crises, booms): France, Russia, Austria and Japan the most
   var RVC = {}, RVN = 0;
   function rivalBase(s, p, a, y) { var key = s.seed + '|' + s.diff + '|' + p + a + y; var c = RVC[key]; if (c != null) return c; if (++RVN > 20000) { RVC = {}; RVN = 0; } var v = rawCurve(p, a, y);
-    if (y > 1860) { var v0 = rawCurve(p, a, 1860), g = 1 + 0.5 * (P(s).rival - 1), ramp = clamp((y - 1861) / 30, 0, 1), k = 1 + ((VAR[p] || 0.2) * (drawK(s, 'fate-' + p) - 0.5) + 0.08 * (drawK(s, 'rk-' + p + a) - 0.5)) * ramp; v = (v0 + (v - v0) * g) * k; }
+    if (y > 1860) { var v0 = rawCurve(p, a, 1860), g = 1 + 0.5 * (P(s).rival - 1), ramp = clamp((y - 1861) / 30, 0, 1), k = 1 + ((VAR[p] || 0.2) * (drawK(s, 'fate-' + p) - 0.5) + 0.08 * (drawK(s, 'rk-' + p + a) - 0.5)) * ramp; v = (v0 + (v - v0) * g) * k;
+      if (y > END3 && VAR41[p]) v *= 1 + VAR41[p] * (drawK(s, 'fate41-' + p) - 0.5) * clamp((y - END3) / 33, 0, 1); } // 4.1: the leaders' own late fortunes vary too (a draw of its own: no other stream moves)
     RVC[key] = v; return v; }
-  function rivalFate(s, p) { return r2(1 + (VAR[p] || 0.2) * (drawK(s, 'fate-' + p) - 0.5)); } // shown on the ranking screen: how this game's world treats each rival
+  var BAL_P = { GB: 0.25, FR: 0.25, RU: 0.3, DE: 0.25, AT: 0.2, IT: 0.15 };
+  var VAR41 = { GB: 0.14, DE: 0.16, US: 0.14 };
+  function rivalFate(s, p) { return r2((1 + (VAR[p] || 0.2) * (drawK(s, 'fate-' + p) - 0.5)) * (VAR41[p] && s.year > END3 ? 1 + VAR41[p] * (drawK(s, 'fate41-' + p) - 0.5) : 1)); } // shown on the ranking screen: how this game's world treats each rival
   function rivalVal(s, p, a, y) { // the curve, varied a little per game after 1860, and faster on a harder difficulty
     y = y == null ? s.year : y; var v = rivalBase(s, p, a, y);
     if (a === 'army' && p === 'RU' && s.race && s.race.RU) v *= 1 + 0.5 * s.race.RU;
     if (a === 'army' && p === 'AT' && s.race && s.race.AT) v *= 1 + 0.5 * s.race.AT;
+    if (s.bal && (a === 'army' || a === 'navy') && BAL_P[p]) v *= 1 + s.bal * BAL_P[p]; // 4.1: the great powers arm against a state that has entered the top four
     return v;
   }
   function indPts(s) {
@@ -1446,7 +1480,7 @@ var M = (function () {
     var tot = s.nizam + (s.ocak ? s.jan * 0.7 : 0);
     var sci = 3 + 0.3 * Object.keys(s.known).length + 2 * instEff(s, 'mt') + 0.8 * extSum(s, 'mektep', 1) + (built(s, 'darulfunun') ? 3 : 0) + (built(s, 'rusdiye') ? 2 : 0) + (built(s, 'mulkiye') ? 1 : 0) + (built(s, 'tibbiye') ? 1 : 0) + 0.6 * fxv(o, 'sci');
     var eg = s.egyptBound ? { army: (s.egypt.men || 18) * 1.6, econ: 3 + 0.03 * lateY(s), ind: 2 } : { army: 0, econ: 0, ind: 0 }; // 4.0: a bound Egypt counts with the empire: its army, its economy, its mills
-    return { ind: r1(1.6 + 0.4 * indPts(s) + 1.25 * fxv(o, 'indu') + eg.ind), army: r1(Math.max(1, tot * q * 0.75 + eg.army)), navy: navyEff(s), econ: r1(3 + 0.025 * Math.max(0, inc) + eg.econ), sci: r1(Math.min(100, sci)), prest: Math.round(s.prest == null ? 45 : s.prest) };
+    return { ind: r1(1.6 + 0.4 * indPts(s) + 1.25 * fxv(o, 'indu') + eg.ind), army: r1(Math.max(1, tot * q * 0.75 + eg.army)), navy: navyEff(s), econ: r1(3 + 0.025 * Math.max(0, inc) + eg.econ + fxv(o, 'econ')), sci: r1(Math.min(100, sci)), prest: Math.round(s.prest == null ? 45 : s.prest) };
   }
   function rankTable(s) { return memoStab(s, function () { return rankTable0(s); }); }
   function rankTable0(s) {
@@ -1464,6 +1498,78 @@ var M = (function () {
     var v = ourVals(s)[a], y = s.year; if (rivalVal(s, p, a, y) <= v) return 0;
     for (var k = 1; k <= 120; k++) if (rivalVal(s, p, a, y - k) <= v) return k;
     return 120;
+  }
+  // ---------- 4.1: why the rank and the score moved this year ----------
+  var AREA_W = {}; AREAS.forEach(function (a) { AREA_W[a[0]] = a[2]; });
+  var AREA_T = { army: ['ordusu', 'ordu gücün', 'orduda'], ind: ['sanayisi', 'sanayi değerin', 'sanayide'], econ: ['ekonomisi', 'ekonomi değerin', 'ekonomide'], navy: ['donanması', 'donanma değerin', 'donanmada'], prest: ['prestiji', 'prestijin', 'prestijde'], sci: ['bilim ve eğitimi', 'bilim ve eğitim değerin', 'bilim ve eğitimde'] };
+  var ACC_N = { 'İngiltere': "İngiltere'yi", 'Fransa': "Fransa'yı", 'Rusya': "Rusya'yı", 'Avusturya': "Avusturya'yı", 'Avusturya-Macaristan': "Avusturya-Macaristan'ı", 'Prusya': "Prusya'yı", 'Almanya': "Almanya'yı", 'ABD': "ABD'yi", 'Piyemonte': "Piyemonte'yi", 'İtalya': "İtalya'yı", 'Japonya': "Japonya'yı", 'İspanya': "İspanya'yı" };
+  function fv(a, v) { return (a === 'army' || a === 'navy' || Math.abs(v) >= 100) ? String(Math.round(v)) : tr(v); }
+  function rankKeep(s) {
+    var rt = rankTable(s), o = { y: s.year, rk: {}, sc: {}, v: {}, best: rt.best, niz: s.nizam, nv: s.navy ? JSON.parse(JSON.stringify(s.navy)) : null, nt: navyTons(s), inc: r1(incomeBreak(s).total), race: s.race ? r2(s.race.RU || 0) : 0, ext: JSON.parse(JSON.stringify(s.ext || {})) };
+    rt.rows.forEach(function (r) { o.rk[r.p] = r.rank; o.sc[r.p] = r.sc; o.v[r.p] = r.v; }); return o;
+  }
+  // what the model knows about why one of our own area values moved
+  function ownCause(s, P, a, dn) { // dn: the value fell (only the causes that point the same way are named)
+    var y = s.year, L = [];
+    if (a === 'navy' && s.navy) {
+      if (dn && s.scrapped && s.scrapped.y === y) L.push('eski gemileri hizmetten çıkardın (' + Math.round(s.scrapped.t) + ' bin ton, değeri ' + Math.round(s.scrapped.v) + ')');
+      if (dn && P.nv) for (var g in GEN_N) { var w0 = genW(g, y - 1), w1 = genW(g, y); if (w1 < w0 && (P.nv[g] || 0) > 0) L.push(GEN_N[g] + ' gemiler artık tonunun %' + Math.round(w1 * 100) + sfx(Math.round(w1 * 100), 'i') + ' sayılıyor (her donanmada; yeni kuşak eskisini eskitir)'); }
+      var dt = navyTons(s) - (P.nt || 0) + (s.scrapped && s.scrapped.y === y ? s.scrapped.t : 0); if (!dn && dt >= 1) L.push('yeni gemiler katıldı (+' + Math.round(dt) + ' bin ton)');
+    }
+    if (a === 'army') {
+      if (P.niz != null && (dn ? s.nizam < P.niz : s.nizam > P.niz)) L.push('Nizam ordusu ' + P.niz + ' → ' + s.nizam + ' bin');
+      if (dn && instFactor(s, 'ae') < 1) L.push('Askerî eğitim eskiyor (etkisi %' + Math.round(instFactor(s, 'ae') * 100) + ')');
+      if (s.lowered && s.lowered.y === y && s.lowered.id === 'ae') L.push('Askerî eğitimi düşürdün');
+    }
+    if (a === 'ind' && dn) { if (instFactor(s, 'si') < 1) L.push('Sanayi teşviki eskiyor (etkisi %' + Math.round(instFactor(s, 'si') * 100) + ')'); if (s.lowered && s.lowered.y === y && s.lowered.id === 'si') L.push('Sanayi teşvikini düşürdün'); }
+    if (a === 'sci' && dn) { if (instFactor(s, 'mt') < 1) L.push('Maarif eskiyor (etkisi %' + Math.round(instFactor(s, 'mt') * 100) + ')'); if (s.lowered && s.lowered.y === y && s.lowered.id === 'mt') L.push('Maarifi düşürdün'); }
+    if (a === 'econ' && P.inc != null) { var i1 = incomeBreak(s).total; if (Math.abs(i1 - P.inc) >= 1) L.push('yıllık gelir ' + Math.round(P.inc) + ' → ' + Math.round(i1) + ' milyon kuruş'); }
+    if (!dn && P.ext) { var XA = { ind: ['celiksan', 'tesis', 'fabrika'], econ: ['sirket'], army: ['topcu', 'kolordu'], navy: ['us'], sci: ['okul', 'mektep'] }[a] || [];
+      XA.forEach(function (id) { var n1 = extN(s, id); if (n1 > (P.ext[id] || 0)) L.push(EXT[id].n + ': ' + n1 + '. ' + EXT[id].step); }); }
+    return L.join('; ');
+  }
+  function rankWhy(s, rk1) {
+    var P = s.rkPrev; if (!P || P.y !== s.year - 1 || !P.rk.OT) return [];
+    var rt = rankTable(s), us = rt.us, r0 = P.rk.OT, r1 = us.rank, row = {}; rt.rows.forEach(function (r) { row[r.p] = r; });
+    function c(p, a) { return AREA_W[a] * 100 * (Math.sqrt(row[p].v[a] / Math.max(0.1, rt.best[a])) - Math.sqrt(P.v[p][a] / Math.max(0.1, P.best[a]))); }
+    function moved(p, a) { var v0 = P.v[p][a], v1 = row[p].v[a]; return Math.abs(v1 - v0) >= Math.max(0.5, 0.01 * Math.abs(v0)); }
+    var used = {};
+    function grp(L) { var by = [], k = {}; L.forEach(function (x) { if (k[x[1]] == null) { k[x[1]] = by.length; by.push([[x[0]], x[1]]); } else by[k[x[1]]][0].push(x[0]); }); return by.map(function (g) { return g[0].join(' ve ') + ' (' + g[1] + ')'; }).join(', '); }
+    function leaderOf(a) { var L0 = null; rt.rows.forEach(function (r) { if (r.p !== 'OT' && (!L0 || r.v[a] > L0.v[a])) L0 = r; }); return L0; }
+    function share(a) { var L0 = leaderOf(a); return AREA_T[a][2] + ' lider ' + L0.n + ' ' + fv(a, P.v[L0.p][a]) + ' → ' + fv(a, L0.v[a]) + ' büyüdükçe senin payın küçüldü'; }
+    function ours(a, dir) { used[a] = 1; var v0 = P.v.OT[a], v1 = us.v[a], cs = ownCause(s, P, a, v1 < v0); return 'senin ' + AREA_T[a][1] + ' ' + fv(a, v0) + ' → ' + fv(a, v1) + (dir ? (v1 < v0 ? ' düştü' : ' arttı') : '') + (cs ? ': ' + cs : ''); }
+    function theirs(p, a) { var v0 = P.v[p][a], v1 = row[p].v[a]; return AREA_T[a][0] + ' ' + fv(a, v0) + ' → ' + fv(a, v1) + (p === 'RU' && a === 'army' && s.race && s.race.RU >= 0.05 ? ', sana karşı silahlanıyor' : ((a === 'army' || a === 'navy') && BAL_P[p] && (s.bal || 0) >= 0.05 ? ', yükselişine karşı silahlanıyor' : '')); }
+    var out = [], A6 = AREAS.map(function (x) { return x[0]; });
+    if (r1 !== r0) {
+      var past = [], over = [];
+      rt.rows.forEach(function (r) { if (r.p === 'OT') return; var was = P.rk[r.p]; if (was > r0 && r.rank < r1) past.push(r); if (was < r0 && r.rank > r1) over.push(r); });
+      var parts = [];
+      if (past.length) { // they passed us: their biggest gain against ours
+        past.sort(function (a, b) { return (b.sc - P.sc[b.p]) - (a.sc - P.sc[a.p]); });
+        var pl = past.slice(0, 2).map(function (q) { var a = A6.slice().sort(function (x, z) { return (c(q.p, z) - c('OT', z)) - (c(q.p, x) - c('OT', x)); })[0];
+          var weFell = us.v[a] < P.v.OT[a] && moved('OT', a);
+          return [q.n, (weFell && -c('OT', a) >= c(q.p, a) ? ours(a, true) : (c(q.p, a) > 0 && moved(q.p, a) ? theirs(q.p, a) : (weFell ? ours(a, true) : share(a))))]; });
+        parts.push(grp(pl) + (past.length > 2 ? ' ve ' + (past.length - 2) + ' güç daha' : '') + ' seni geçti');
+      }
+      if (over.length) { // we passed them: our biggest gain against theirs
+        over.sort(function (a, b) { return (P.sc[b.p] - b.sc) - (P.sc[a.p] - a.sc); });
+        var ol = over.slice(0, 2).map(function (q) { var a = A6.slice().sort(function (x, z) { return (c('OT', z) - c(q.p, z)) - (c('OT', x) - c(q.p, x)); })[0];
+          var theyFell = row[q.p].v[a] < P.v[q.p][a] && moved(q.p, a);
+          return [ACC_N[q.n] || q.n, (theyFell && -c(q.p, a) > c('OT', a) ? q.n + ' ' + theirs(q.p, a) : (c('OT', a) > 0 && moved('OT', a) ? ours(a, false) : (theyFell ? q.n + ' ' + theirs(q.p, a) : share(a))))]; });
+        parts.push(grp(ol) + (over.length > 2 ? ' ve ' + (over.length - 2) + ' güç daha' : '') + ' geçtin');
+      }
+      out.push('Güç sıralamasında ' + r0 + '. → ' + r1 + '. sıra' + (parts.length ? ': ' + parts.join('; ') : '') + '.' + (r1 <= 8 && r0 > 8 ? ' Büyük güçler arasındasın.' : (r1 > 8 && r0 <= 8 ? ' İlk sekizin dışındasın.' : '')));
+    }
+    var d = r1 - 0, ds = us.sc - P.sc.OT;
+    if (Math.abs(ds) >= 0.1 || r1 !== r0) {
+      var sg = ds >= 0 ? 1 : -1, a2 = A6.slice().sort(function (x, z) { return sg * c('OT', z) - sg * c('OT', x); })[0], cv = c('OT', a2), dv = us.v[a2] - P.v.OT[a2], t; // the area that moved the score the way it went
+      if (dv * cv > 0 && Math.abs(dv) >= 0.05) t = (ds >= 0 ? 'en çok ' : 'en çok ') + AREA_T[a2][2] + (cv >= 0 ? ' kazandın' : ' kaybettin') + ': ' + ours(a2, false);
+      else { var L0 = null; rt.rows.forEach(function (r) { if (r.p !== 'OT' && (!L0 || r.v[a2] > L0.v[a2])) L0 = r; });
+        t = AREA_T[a2][2] + ' lider ' + L0.n + ' ' + fv(a2, P.v[L0.p][a2]) + ' → ' + fv(a2, L0.v[a2]) + (cv < 0 ? ' büyüdü; sen ' + (dv > 0 ? 'ondan yavaş büyüdükçe' : 'yerinde saydıkça') + ' payın küçüldü' : ' geriledi; payın büyüdü'); }
+      if (r1 !== r0 && used[a2]) return out; // the rank line already named it
+      out.push('Puanın ' + tr(P.sc.OT) + ' → ' + tr(us.sc) + ' (' + (ds >= 0 ? '+' : '−') + tr(Math.abs(ds)) + '): ' + t + '.');
+    }
+    void d; return out.slice(0, 2);
   }
   function areaLeader(s, a, tbl) { tbl = tbl || rankTable(s); var b = null; tbl.rows.forEach(function (r) { if (r.p !== 'OT' && (!b || r.v[a] > b.v[a])) b = r; }); return b; }
 
@@ -1601,7 +1707,7 @@ var M = (function () {
     return null;
   };
   A.raise = function (s, id) { var w = A.instCheck(s, id); if (w) return { ok: false, why: w }; var I = INST[id], st = s.inst[id], to = st.lvl + 1; s.rp -= I.rp[to]; st.pend = { to: to, yrs: 2 }; if (s.split) st.ref = s.year + 2; decide(s, I.n + ' kurumunu ' + to + '. seviyeye yükselttin'); return { ok: true }; };
-  A.lower = function (s, id) { var st = s.inst[id]; if (st.pend || st.lvl === 0) return { ok: false, why: 'Düşürülemez' }; st.lvl -= 1; decide(s, INST[id].n + ' kurumunu ' + st.lvl + '. seviyeye düşürdün'); return { ok: true }; };
+  A.lower = function (s, id) { var st = s.inst[id]; if (st.pend || st.lvl === 0) return { ok: false, why: 'Düşürülemez' }; st.lvl -= 1; if (s.split) s.lowered = { y: s.year, id: id }; decide(s, INST[id].n + ' kurumunu ' + st.lvl + '. seviyeye düşürdün'); return { ok: true }; };
   A.ocakChance = function (s) {
     var L = [{ n: 'Taban', v: 0.2 }]; if (P(s).ocak) L.push({ n: 'Zorluk: ' + P(s).n, v: P(s).ocak });
     L.push({ n: 'Nizam askeri ' + s.nizam + ' bin', v: 0.6 * s.nizam / (s.nizam + 25) });
@@ -1738,7 +1844,7 @@ var M = (function () {
     if (!canAfford(s, extCost(s, id))) return 'Hazine yetmiyor (' + extCost(s, id) + ' milyon kuruş)';
     return null;
   };
-  A.ext = function (s, id) { var w = A.extCheck(s, id); if (w) return { ok: false, why: w }; s.treasury -= extCost(s, id); s.rp -= extRp(s, id); s.extB[id] = 1; decide(s, EXT[id].n + ': ' + (extN(s, id) + 1) + '. ' + EXT[id].step + ' için ödenek verdin'); return { ok: true }; };
+  A.ext = function (s, id) { var w = A.extCheck(s, id); if (w) return { ok: false, why: w }; s.treasury -= extCost(s, id); s.rp -= extRp(s, id); s.extB[id] = 1; if (id === 'us') { rel(s, 'GB', -1); if (s.rel.IT != null) rel(s, 'IT', -1); coalAdd(s, 0.01); } decide(s, EXT[id].n + ': ' + (extN(s, id) + 1) + '. ' + EXT[id].step + ' için ödenek verdin'); return { ok: true }; };
   // tax relief for one restless province: half its tax for three years, and it calms down
   A.reliefCheck = function (s, r) {
     if (!REGIONS[r] || !regionOn(s, r)) return 'Senin elinde değil';
@@ -2589,7 +2695,7 @@ var M = (function () {
     for (var k in s.inst) { var st = s.inst[k]; if (st.pend) { st.pend.yrs--; if (st.pend.yrs <= 0) { st.lvl = st.pend.to; st.pend = null; if (s.split) st.ref = y; line(INST[k].n + ' ' + st.lvl + '. seviyeye oturdu.', 'good'); } } }
     if (s.split) for (var k2 in s.inst) { var f2 = instFactor(s, k2); if (f2 < 1 && s.inst[k2].lvl && (s.year - (s.inst[k2].ref || 1861)) % 4 === 1) line(INST[k2].n + ' eskiyor: ' + (s.inst[k2].ref || 1861) + sfx(s.inst[k2].ref || 1861, 'den') + ' beri yenilenmedi, etkisi %' + Math.round(f2 * 100) + '. Reform sekmesinden yenile ya da yükselt.', 'bad'); }
     if (s.navyB) for (var nb in s.navyB) if (s.navyB[nb]) { var nn = s.navyB[nb]; s.navyB[nb] = 0; s.navy[NAVY[nb].gen] = r1((s.navy[NAVY[nb].gen] || 0) + nn * NAVY[nb].tons); line(NAVY[nb].n + (nn > 1 ? ' (' + nn + ')' : '') + ' donanmaya katıldı (+' + nn * NAVY[nb].tons + ' bin ton).', 'good'); chron(s, NAVY[nb].n + ' donanmaya katıldı.'); }
-    for (var xb in s.extB) if (s.extB[xb]) { s.extB[xb] = 0; s.ext[xb] = (s.ext[xb] || 0) + 1; line(EXT[xb].n + ': ' + s.ext[xb] + '. ' + EXT[xb].step + ' tamamlandı.', 'good'); }
+    for (var xb in s.extB) if (s.extB[xb]) { s.extB[xb] = 0; extDone(s, xb); line(EXT[xb].n + ': ' + s.ext[xb] + '. ' + EXT[xb].step + ' tamamlandı.', 'good'); }
     // projects
     for (var p in s.projects) { var pr = s.projects[p]; if (pr !== 'done') { pr.yrs--; if (pr.yrs <= 0) { s.projects[p] = 'done'; line(PROJ[p].n + ' tamamlandı. ' + PROJ[p].desc, 'good'); chron(s, PROJ[p].n + ' açıldı.'); } } }
     // laws taking effect
@@ -2602,7 +2708,7 @@ var M = (function () {
     if (s.pendingImport) { s.rifles += s.pendingImport; s.imported += s.pendingImport; line('Belçika tüfekleri geldi: +' + s.pendingImport + ' bin.'); s.pendingImport = 0; }
     // growth of the economy: the slow harvest of peace, farming and roads
     var gr = 0.002 + 0.003 * instEff(s, 'zi') + (built(s, 'sose') ? 0.001 : 0) + (built(s, 'ciftlik') ? 0.001 : 0) + (built(s, 'aydin') ? 0.002 : 0) + (built(s, 'tibbiye') ? 0.001 : 0) + (stab0 >= 50 ? 0.002 : 0) - (s.temp.some(function (t) { return t.id === 'wear'; }) ? 0.004 : 0);
-    if (s.split) gr = Math.min(0.016, 0.004 + 0.45 * (gr + fxv(fxAll(s), 'growth'))); // 4.0: after 1860 growth has a floor (world trade) and a ceiling (about 1,6 % a year)
+    if (s.split) { var gq = 0.004 + 0.45 * (gr + fxv(fxAll(s), 'growth')); gr = y > END3 ? softGrowth(gq) : Math.min(0.016, gq); } // 4.0: after 1860 growth has a floor (world trade) and a ceiling (about 1,6 % a year); 4.1: from 1881 the ceiling is soft
     s.growth = r2((s.growth || 1) * (1 + gr) * 1000) / 1000;
     // money
     var inc = incomeBreak(s, s.harvest), exp = expenseBreak(s);
@@ -2634,7 +2740,9 @@ var M = (function () {
     // the balance of power, one rule for every great power: each leans toward the weaker side. Our power against Russia (Austria not counted) sets the lean.
     var lean0 = s.lean || 0; s.lean = 0; s.lean = r2(leanOf(forecast(s, 'balkan', 'russia', false, true).ratio));
     if (s.split) { // 4.0: the coalition rule: the further up the ranking, the more the powers balance against us
-      var rk0 = s.rank || 10; s.coal = r2(clamp((s.coal || 0) * 0.9 + Math.max(0, 8.5 - rk0) * 0.01, 0, 1)); s.lean = r2(clamp(s.lean * 0.6 + s.coal, -0.5, 1));
+      var rk0 = s.rank || 10; s.coal = r2(clamp((s.coal || 0) * 0.9 + Math.max(0, 8.5 - rk0) * 0.01, 0, 1));
+      if (y > END3) { var b0 = s.bal || 0; s.bal = r2(clamp(b0 * 0.85 + Math.max(0, 3.5 - rk0) * 0.03, 0, 0.5)); if (s.bal >= 0.1 && b0 < 0.1) line('Büyük güçler yükselişine karşı silahlanıyor: ilk dörde girdikçe orduları ve donanmaları senin yüzünden büyüyor.', 'rival'); } // 4.1: the powers balance against a rising state
+      s.lean = r2(clamp(s.lean * 0.6 + s.coal, -0.5, 1));
     }
     var relT = relTarget(s);
     ['GB', 'FR'].forEach(function (c) { var tt = relT + (s.align === 'itilaf' ? 15 : (s.align === 'merkez' ? -12 : 0)); s.rel[c] += (tt - s.rel[c]) * 0.08; s.rel[c] = clamp(s.rel[c], 0, 100); });
@@ -2692,10 +2800,13 @@ var M = (function () {
     if (stab1 !== stab0) line('İstikrar ' + stab0 + ' → ' + stab1 + '.', stab1 < stab0 ? 'bad' : 'good');
     // prestige (all eras; before 1861 only shown): land held, strength against Russia, victories and defeats, fading slowly
     { var kc0 = keptCount(s), rr0 = Math.min(1.3, forecast(s, 'balkan', 'russia', false, true).ratio) / 1.3; s.prestB = r2((s.prestB || 0) * 0.9);
-      var ptg = 10 + 25 * kc0.k / kc0.all + 10 * rr0 + (s.paris === 'win' ? 6 : 0) + (esasiOn(s) ? 3 : 0) + (s.egyptBound ? 4 : 0) + (s.split ? fxv(fxAll(s), 'prest') : 0);
+      var ptg = 10 + 25 * kc0.k / kc0.all + 10 * rr0 + (s.paris === 'win' ? 6 : 0) + (esasiOn(s) ? 3 : 0) + (s.egyptBound ? 4 : 0) + (s.split ? fxv(fxAll(s), 'prest') : 0) - (y > END3 ? Math.round(15 * (s.bal || 0)) : 0); // 4.1: a state in the top two is watched with suspicion: its prestige pays for it
       s.prest = Math.round(clamp(ptg + s.prestB, 0, 95)); }
     var rk1 = s.rank; snapshot(s);
-    if (s.split && rk1 && s.rank !== rk1) line('Güç sıralaması: ' + rk1 + '. → ' + s.rank + '.' + (s.rank <= 8 ? ' Büyük güçler arasındasın.' : ' İlk sekizin dışındasın.'), s.rank < rk1 ? 'good' : 'bad');
+    if (s.split) { // 4.1: the ranking explains itself: one or two lines, first in the year's account, kept for the ranking screen and the decade report
+      var rw = rankWhy(s, rk1); rw.forEach(function (t, i) { R.splice(i, 0, { t: t, k: 'rank' }); s.rkNotes = (s.rkNotes || []).concat([[y, t]]).slice(-120); });
+      s.rkPrev = rankKeep(s);
+    }
     // collapse
     var ct = P(s).coup;
     if (stab1 < ct && draw(s, 'coup') < (ct - stab1) / 12) { s.over = true; s.endReason = 'coup'; line('DARBE: istikrar çöktü, padişah tahttan indirildi.', 'bad'); }
@@ -2727,7 +2838,7 @@ var M = (function () {
     try { return JSON.parse(JSON.stringify(s)); } finally { s.history = keep.history; s.decisions = keep.decisions; s.chron = keep.chron; s.evlog = keep.evlog; }
   }
   function settle(s) {
-    for (var xb in (s.extB || {})) if (s.extB[xb]) { s.extB[xb] = 0; s.ext[xb] = (s.ext[xb] || 0) + 1; }
+    for (var xb in (s.extB || {})) if (s.extB[xb]) { s.extB[xb] = 0; extDone(s, xb); }
     if (s.navyB) for (var nb in s.navyB) if (s.navyB[nb]) { s.navy[NAVY[nb].gen] = (s.navy[NAVY[nb].gen] || 0) + s.navyB[nb] * NAVY[nb].tons; s.navyB[nb] = 0; }
     for (var p in s.projects) if (s.projects[p] !== 'done') s.projects[p] = 'done';
     for (var k in s.inst) if (s.inst[k].pend) { s.inst[k].lvl = s.inst[k].pend.to; s.inst[k].pend = null; }
@@ -2775,6 +2886,22 @@ var M = (function () {
       [['ind', 'Sanayi endeksi'], ['sci', 'Bilim ve eğitim endeksi'], ['nav', 'Donanma (etkili ton)'], ['prs', 'Prestij'], ['arm', 'Ordu gücü (sıralamada)']].forEach(function (k) { if (Math.abs(m1[k[0]] - m0[k[0]]) >= 0.5) add(k[0], k[1], m0[k[0]], m1[k[0]], 'dec', m1[k[0]] > m0[k[0]]); });
     }
     return out;
+  }
+  // 4.1: the six area values before and after an action, and the yearly net. Settled (work done) by default; with now=true
+  // as they stand the moment the action is taken (an action that lowers an area at once must say so before it is confirmed)
+  function areaPreview(s, fn, now) {
+    if (!s.split) return null; var b = cloneLight(s); b._preview = true; var r = fn(b); if (r && r.ok === false) return null;
+    var base; if (now) base = { v: ourVals(s), net: incomeBreak(s).total - expenseBreak(s).total, sc: rankTable(s).us.sc };
+    else if (PV && PV.s === s && PV.a0) base = PV.a0; else { var c = settle(cloneLight(s)); base = { v: ourVals(c), net: incomeBreak(c).total - expenseBreak(c).total, sc: rankTable(c).us.sc }; if (PV && PV.s === s) PV.a0 = base; }
+    if (!now) settle(b); var rt = rankTable(b);
+    return { v0: base.v, v1: ourVals(b), net0: base.net, net1: incomeBreak(b).total - expenseBreak(b).total, sc0: base.sc, sc1: rt.us.sc, best: rt.best };
+  }
+  // the areas an action lowers at once, with the numbers (empty when none)
+  function areaDrops(s, fn) {
+    var p = areaPreview(s, fn, true); if (!p) return []; var out = [];
+    AREAS.forEach(function (a) { var k = a[0], d = p.v1[k] - p.v0[k]; if (d < -0.05 && d / Math.max(1, p.v0[k]) <= -0.01) out.push({ k: k, n: a[1], v0: p.v0[k], v1: p.v1[k] }); }); // a fall of 1 % or more
+    if (out.length && p.sc1 - p.sc0 > -0.05 && !out.some(function (x) { return x.v1 / Math.max(1, x.v0) <= 0.95; })) out = []; // a fall too small to move the score is not worth a question
+    if (out.length) { out.sc = [p.sc0, p.sc1]; out.net = [p.net0, p.net1]; } return out;
   }
   function previewEvent(s, id, idx) {
     var c0 = eventCard(s, id); if (!c0 || !c0.opts[idx] || c0.opts[idx].disabled) return null;
@@ -2957,7 +3084,7 @@ var M = (function () {
   function startInfo() { return [[1816, 105, 'Baştan: Ocak, Mısır ve Tanzimat'], [1841, 80, 'Tanzimat\'tan: Kırım ve demiryolu'], [1861, 57, 'Abdülaziz\'den: borç, anayasa, 93 Harbi'], [1881, 36, 'Abdülhamid\'den: bloklar, Bağdat, Balkan Savaşları']].filter(function (x) { return x[0] === START || STARTS[x[0]]; }); }
   function startFrom(seed, diff, start) { // a prepared middling state; the seed then belongs to the new player
     var s = JSON.parse(JSON.stringify(STARTS[start]));
-    s.seed = String(seed); s.diff = DIFF[diff] ? diff : 'normal'; s.start = start; s.decisions = []; s.evlog = []; s.over = false; s.endReason = null; s.events = [];
+    s.v = 41; s.seed = String(seed); s.diff = DIFF[diff] ? diff : 'normal'; s.start = start; s.decisions = []; s.evlog = []; s.over = false; s.endReason = null; s.events = [];
     continueEra(s); s.judge1 = null; s.judge2 = null; s.judge3 = null; s.prepared = start;
     chron(s, 'Hazır başlangıç: ' + start + '. Devlet, sıradan bir oyunun bu yıla getirdiği hâlde.');
     return s;
@@ -3199,8 +3326,8 @@ var M = (function () {
   }
   // a record made under older rules: replay what still applies, skip what does not, and stop where the two games part
   // (an event the old game never met waits for a decision: from there the player plays on). evlog, when the old state is at hand, names each event answered.
-  function replayOld(seed, diff, cmds, evlog) {
-    var s = newGame(seed, diff), used = [], skipped = 0, stopped = false, ei = 0;
+  function replayOld(seed, diff, cmds, evlog, start) { // 4.1: a 4.0 record keeps its start year
+    var s = newGame(seed, diff, start), used = [], skipped = 0, stopped = false, ei = 0;
     for (var i = 0; i < cmds.length && !s.over; i++) {
       var c = cmds[i], card = s.pause ? null : currentEvent(s);
       if (c.slice(0, 3) === 'ev:') {
@@ -3220,7 +3347,7 @@ var M = (function () {
   return { END3: END3, END4: END4, ENDS: ENDS, maxL: maxL, regionsOf: regionsOf, regionBase: regionBase, fxAll: fxAll, instFactor: instFactor, renewCost: renewCost, NAVY: NAVY, GEN_N: GEN_N, genW: genW, navyEff: navyEff, navyTons: navyTons, navyCost: navyCost, navyUpkeep: navyUpkeep, homeBuilt: homeBuilt, seaCtl: seaCtl, greekNavy: greekNavy,
     scrapList: scrapList, rivalFate: rivalFate, POWERS: POWERS, powName: powName, AREAS: AREAS, rankTable: rankTable, rivalVal: rivalVal, gapYears: gapYears, areaLeader: areaLeader, ruWhy: ruWhy, ruWatch: ruWatch, BLOC: BLOC, blocName: blocName, blocMembers: blocMembers, bidSize: bidSize, NUF: NUF, CW: CW, ligaArmy: ligaArmy, esasiOn: esasiOn, debtRatio: debtRatio, STARTS: STARTS, startInfo: startInfo, qcapOf: qcapOf,
     VERSION: VERSION, START: START, END1: END1, END2: END2, endOf: endOf, DIFF: DIFF, P: P, diffText: diffText, TECHS: TECHS, INST: INST, PROJ: PROJ, LAWS: LAWS, DIP: DIP, REGIONS: REGIONS, REGION_NAMES: REGION_NAMES,
-    newGame: newGame, A: A, apply: apply, pvScope: pvScope, replay: replay, replayOld: replayOld, packLog: packLog, unpackLog: unpackLog, VERB: VERB, LISTS: LISTS, MAXL: MAXL, STAB: STAB, CONC: CONC, EXT: EXT, extN: extN, extCost: extCost, extRp: extRp, extNext: extNext, EFFCAP: EFFCAP, effRaw: effRaw, raceGap: raceGap, relTarget: relTarget, leanOf: leanOf, PROJ_GROUPS: PROJ_GROUPS, INST4: INST4,
+    newGame: newGame, A: A, apply: apply, areaPreview: areaPreview, areaDrops: areaDrops, accProd: accProd, accStep: accStep, ACC_K: ACC_K, softGrowth: softGrowth, growShare: growShare, ourVals: ourVals, pvScope: pvScope, replay: replay, replayOld: replayOld, packLog: packLog, unpackLog: unpackLog, VERB: VERB, LISTS: LISTS, MAXL: MAXL, STAB: STAB, CONC: CONC, EXT: EXT, extN: extN, extCost: extCost, extRp: extRp, extNext: extNext, EFFCAP: EFFCAP, effRaw: effRaw, raceGap: raceGap, relTarget: relTarget, leanOf: leanOf, PROJ_GROUPS: PROJ_GROUPS, INST4: INST4,
     nizamMax: nizamMax, rpCap: rpCap, lawCost: lawCost, ruThr: ruThr, regainInfo: regainInfo, famineMult: famineMult, agriOf: agriOf, contingentOn: contingentOn, clone: clone, settle: settle, currentEvent: currentEvent, eventCard: eventCard, endYear: endYear, continueEra: continueEra, finish: finish,
     stabilityBreak: stabilityBreak, stability: stability, incomeBreak: incomeBreak, expenseBreak: expenseBreak, FAVOR: FAVOR, rpGainBreak: rpGainBreak, researchBreak: researchBreak, dependenceBreak: dependenceBreak, forecast: forecast,
     capacity: capacity, building: building, RETAKE: RETAKE, retakeDef: retakeDef, retakeList: retakeList, recruitCap: recruitCap, preview: preview, previewEvent: previewEvent, sfx: sfx, goals: goals, path: path, stabilityCauses: stabilityCauses, metrics: metrics, available: available,
@@ -3255,9 +3382,9 @@ if (typeof module !== 'undefined') module.exports = M;
   function stSet(k, v) { mem[k] = v; try { window.localStorage.setItem(k, v); return true; } catch (e) { return false; } }
   function stDel(k) { delete mem[k]; try { window.localStorage.removeItem(k); } catch (e) { } }
   function save() { if (s && rec) ui.saved = stSet(KEY, JSON.stringify({ v: 3, s: s, rec: rec, tab: ui.tab })); }
-  function load() { try { var d = JSON.parse(stGet(KEY) || 'null'); return d && d.v === 3 && d.s && (d.s.v === 40 || d.s.v === 32 || d.s.v === 31 || d.s.v === 3) && d.rec && d.rec.log ? d : null; } catch (e) { return null; } }
-  function isOld(d) { return !!d && d.s.v !== 40; } // a save of version 3.0, 3.1 or 3.2
-  function oldVer(d) { return d.s.v === 3 ? '3.0' : (d.s.v === 31 ? '3.1' : '3.2'); }
+  function load() { try { var d = JSON.parse(stGet(KEY) || 'null'); return d && d.v === 3 && d.s && (d.s.v === 41 || d.s.v === 40 || d.s.v === 32 || d.s.v === 31 || d.s.v === 3) && d.rec && d.rec.log ? d : null; } catch (e) { return null; } }
+  function isOld(d) { return !!d && d.s.v !== 41; } // a save of version 3.0, 3.1, 3.2 or 4.0 (4.1: a 4.0 save is rebuilt from its commands too)
+  function oldVer(d) { return d.s.v === 3 ? '3.0' : (d.s.v === 31 ? '3.1' : (d.s.v === 40 ? '4.0' : '3.2')); }
   function clearSave() { stDel(KEY); }
   function meta() { try { var m = JSON.parse(stGet(META) || '{}'); return m && typeof m === 'object' ? m : {}; } catch (e) { return {}; } }
   function setMeta(m) { stSet(META, JSON.stringify(m)); }
@@ -3298,35 +3425,36 @@ if (typeof module !== 'undefined') module.exports = M;
   function sugOf(Y) { return [(Y.cs || 0) + Y.sg.filter(function (x) { return x.indexOf('wait:') !== 0; }).length, (Y.cf || 0) + Y.fo.length, Y.tp || 0]; } // shown (those with an action), followed, taps; cs and cf are counts carried in by a save code
   function sugList() { var out = []; Object.keys(rec.yrs).sort().forEach(function (y) { var c = sugOf(rec.yrs[y]); if (c[0] || c[1] || c[2]) out.push([+y, c[0], c[1], c[2]]); }); return out; }
   function sugTotals() { var sh = 0, fo = 0, tp = 0; sugList().forEach(function (c) { sh += c[1]; fo += c[2]; tp += c[3]; }); return { shown: sh, followed: fo, taps: tp }; }
-  function saveCode() { return 'P1815K4.' + b64e(JSON.stringify({ sd: rec.seed, df: rec.diff, st: startY(), lg: packLog(rec.log), h: hash(JSON.stringify(s)), id: rec.id, at: rec.at, t: times(), sg: sugList(), rs: rec.restarts, sv: rec.survey, tz: idleList() })); }
+  function saveCode() { return 'P1815K41.' + b64e(JSON.stringify({ sd: rec.seed, df: rec.diff, st: startY(), lg: packLog(rec.log), h: hash(JSON.stringify(s)), id: rec.id, at: rec.at, t: times(), sg: sugList(), rs: rec.restarts, sv: rec.survey, tz: idleList() })); }
   function dataBlock() { // for the owner: the whole game replays from this; time per year, suggestions, the survey, and (4.0) the rank, actions and idle money of every year ride along
-    return 'P1815R4.' + b64e(JSON.stringify({ sd: rec.seed, df: rec.diff, st: startY(), lg: packLog(rec.log), h: hash(JSON.stringify(s)), id: rec.id, at: rec.at, t: times(), sg: sugList(), rs: rec.restarts, sv: rec.survey, rk: rankList(), ac: actList(), tz: idleList() }));
+    return 'P1815R41.' + b64e(JSON.stringify({ sd: rec.seed, df: rec.diff, st: startY(), lg: packLog(rec.log), h: hash(JSON.stringify(s)), id: rec.id, at: rec.at, t: times(), sg: sugList(), rs: rec.restarts, sv: rec.survey, rk: rankList(), ac: actList(), tz: idleList() }));
   }
   function readCode(text) {
-    var m = /P1815[KR](4|32|31|3)\.([A-Za-z0-9_-]+)/.exec(String(text || '').replace(/\s+/g, '')); if (!m) return { err: 'Bu bir kayıt kodu değil. Kod "P1815K4." ile başlar; tamamını yapıştır.' };
+    var m = /P1815[KR](41|4|32|31|3)\.([A-Za-z0-9_-]+)/.exec(String(text || '').replace(/\s+/g, '')); if (!m) return { err: 'Bu bir kayıt kodu değil. Kod "P1815K41." ile başlar; tamamını yapıştır.' };
     var d; try { d = JSON.parse(b64d(m[2])); } catch (e) { return { err: 'Kod eksik ya da bozuk görünüyor. Tamamını kopyalayıp yeniden dene.' }; }
     var cmds = unpackLog(String(d.lg || '')); if (!cmds || !M.DIFF[d.df] || d.sd == null) return { err: 'Kod okunamadı: başka bir sürüme ait olabilir.' };
-    return { d: d, cmds: cmds, old: m[1] !== '4', ver: { 3: '3.0', 31: '3.1', 32: '3.2' }[m[1]] || '4.0' };
+    return { d: d, cmds: cmds, old: m[1] !== '41', ver: { 3: '3.0', 31: '3.1', 32: '3.2', 4: '4.0' }[m[1]] || '4.1' };
   }
   // build a game from a command list. A 3.0 list is replayed under the 3.1 rules as far as it still fits (M.replayOld).
   function rebuild(seed, diff, cmds, old, evlog, from, st) {
     var keep = { s: s, rec: rec }, list = cmds, info = null;
     try {
-      if (old) { info = M.replayOld(seed, diff, cmds, evlog); list = info.used; if (cmds.length && !list.length) throw new Error('nothing applied'); }
-      s = M.newGame(seed, diff, old ? M.START : st); rec = newRec(seed, diff, old ? M.START : st);
-      if (from) { rec.id = from.id || rec.id; rec.at = from.at || rec.at; rec.restarts = from.restarts || 0; rec.survey = from.survey || {}; (from.idle || []).forEach(function (x) { rec.idle[x[0]] = x[1]; }); }
+      var st0 = old && old !== '4.0' ? M.START : (st || M.START); // 3.x records began in 1816; a 4.0 record keeps its start year
+      if (old) { info = M.replayOld(seed, diff, cmds, evlog, st0); list = info.used; if (cmds.length && !list.length) throw new Error('nothing applied'); }
+      s = M.newGame(seed, diff, st0); rec = newRec(seed, diff, st0);
+      if (from) { rec.id = from.id || rec.id; rec.at = from.at || rec.at; rec.restarts = from.restarts || 0; rec.survey = from.survey || {}; var fi = from.idle || []; if (Array.isArray(fi)) fi.forEach(function (x) { rec.idle[x[0]] = x[1]; }); else Object.keys(fi).forEach(function (y) { rec.idle[y] = fi[y]; }); /* a code carries pairs; a 4.0 save, an object */ }
       for (var i = 0; i < list.length; i++) doCmd(list[i], true);
       if (old) rec.from30 = [info.total, list.length];
     } catch (e) { s = keep.s; rec = keep.rec; return { err: true }; }
     return { info: info, keep: keep };
   }
-  function oldNote(info, ver) { return (ver || '3.2') + ' kaydın 4.0 kurallarıyla yeniden kuruldu: ' + info.total + ' kararın ' + info.used.length + ' tanesi uygulandı; oyun ' + (s.pause ? (M.ENDS[s.era - 1]) + '\'taki hükümden (artık 1914\'e kadar devam edebilirsin)' : (s.over ? 'sonuç ekranından' : s.year + ' yılından')) + ' sürüyor.'; }
+  function oldNote(info, ver) { return (ver || '3.2') + ' kaydın ' + M.VERSION + ' kurallarıyla yeniden kuruldu: ' + info.total + ' kararın ' + info.used.length + ' tanesi uygulandı; oyun ' + (s.pause ? (M.ENDS[s.era - 1]) + '\'taki hükümden (artık 1914\'e kadar devam edebilirsin)' : (s.over ? 'sonuç ekranından' : s.year + ' yılından')) + ' sürüyor.'; }
   function importCode(text) {
     var r = readCode(text); if (r.err) return r.err;
     var b = rebuild(r.d.sd, r.d.df, r.cmds, r.old ? r.ver : false, null, { id: r.d.id, at: r.d.at, restarts: r.d.rs, survey: r.d.sv, idle: r.d.tz }, r.d.st || M.START);
-    if (b.err) return r.old ? 'Bu ' + r.ver + ' kodu 4.0 kurallarıyla kurulamadı. Yeni bir oyun başlatabilirsin.' : 'Kod okunamadı: aynı oyun kurulamadı.';
+    if (b.err) return r.old ? 'Bu ' + r.ver + ' kodu ' + M.VERSION + ' kurallarıyla kurulamadı. Yeni bir oyun başlatabilirsin.' : 'Kod okunamadı: aynı oyun kurulamadı.';
     if (!r.old && r.d.h && hash(JSON.stringify(s)) !== r.d.h) { s = b.keep.s; rec = b.keep.rec; return 'Bu kod oyunun başka bir sürümünde üretilmiş; aynı oyun kurulamadı.'; }
-    (r.d.t || []).forEach(function (t, i) { var y0 = r.old ? M.START : (r.d.st || M.START); if (t && y0 + i <= s.year) yrRec(y0 + i).t = t; });
+    (r.d.t || []).forEach(function (t, i) { var y0 = r.old && r.ver !== '4.0' ? M.START : (r.d.st || M.START); if (t && y0 + i <= s.year) yrRec(y0 + i).t = t; });
     (r.d.sg || []).forEach(function (c) { if (c[0] > s.year) return; var Y = yrRec(c[0]); Y.sg = []; Y.fo = []; Y.cs = c[1]; Y.cf = c[2]; Y.tp = c[3] || 0; });
     ui.note = r.old ? oldNote(b.info, r.ver) : null;
     return null;
@@ -3699,7 +3827,7 @@ if (typeof module !== 'undefined') module.exports = M;
     var up = prev(function (b) { M.A.setNizam(b, b.nizamTarget + 5); return { ok: true }; }, '+5 bin hedefin etkisi');
     var out = '<section class="pane"><h2>Ordu hazırlığı</h2><div class="row2"><div><h3>' + gloss('Nizam askeri') + '</h3>' +
       '<div class="stepper">' + btn('nizam', '−5', { arg: -5, cls: 'btn sq' }) + '<span><b>' + s.nizamTarget + '</b> bin hedef<br><small>şu an ' + s.nizam + ' bin · yılda en çok ' + cap + ' bin toplanır · tavan ' + M.nizamMax(s) + ' bin</small></span>' + btn('nizam', '+5', { arg: 5, cls: 'btn sq' }) + '</div>' + up +
-      '<p class="note">' + gloss('Hedefe ulaşınca yıllık maliyet ' + fmt(s.nizamTarget * M.nizamCost(s), 1) + ' milyon kuruş (bin asker ' + fmt(M.nizamCost(s), 2) + ').' + (s.ocak ? ' Ocak varken Nizam büyüdükçe Yeniçeriler kızar.' : '') + (s.nizamTarget >= M.nizamMax(s) ? ' Ordu tavanında: tavanı Kur\'a Kanunu (+30 bin) ve Taşra kışlaları (+20 bin) yükseltir.' : '')) + '</p>' + callupBox() + '</div>' +
+      '<p class="note">' + gloss('Hedefe ulaşınca yıllık maliyet ' + fmt(s.nizamTarget * M.nizamCost(s), 1) + ' milyon kuruş (bin asker ' + fmt(M.nizamCost(s), 2) + ').' + (s.ocak ? ' Ocak varken Nizam büyüdükçe Yeniçeriler kızar.' : '') + (s.nizamTarget >= M.nizamMax(s) ? ' Ordu tavanında: tavanı Kur\'a Kanunu (+30 bin) ve Taşra kışlaları (+20 bin) yükseltir.' : '')) + '</p>' + (s.split && s.nizamTarget < s.nizam ? (function () { var p = M.areaPreview(s, function (b) { b.nizam = b.nizamTarget; return { ok: true }; }); return p ? '<p class="note bad">Yıl sonunda ' + (s.nizam - s.nizamTarget) + ' bin asker terhis edilir: ordu gücün ' + fmt(p.v0.army) + ' → ' + fmt(p.v1.army) + ', sıralama puanın ' + sg(Math.round((p.sc1 - p.sc0) * 10) / 10, 1) + '.</p>' : ''; })() : '') + callupBox() + '</div>' +
       '<div><h3>Kuvvetler</h3><table class="t"><tr><td>' + gloss('Yeniçeriler') + why(s.ocak ? 'kâğıtta 60 bin, sahada yaklaşık 42 bin; talimsiz' : 'Ocak kaldırıldı') + '</td><td class="num">' + (s.ocak ? '60 bin' : '–') + '</td></tr>' +
       '<tr><td>Nizam askeri</td><td class="num">' + s.nizam + ' bin</td></tr><tr><td>Modern tüfek stoku' + why((s.projects.tufekhane === 'done' ? 'Tüfekhane yılda +' + (6 + 2 * s.inst.si.lvl) + ' bin' + (s.inst.si.lvl ? ' (sanayi teşviki dahil)' : '') : 'Tüfekhane yok') + (s.imported ? ' · ' + s.imported + ' bin ithal' : '')) + '</td><td class="num">' + fmt(s.rifles) + ' bin</td></tr></table></div></div>' +
       warNote + '<h3>"Bugün savaşsaydık"</h3><div class="row2"><div class="fcbox"><h4>Balkan: Rusya\'ya karşı ' + fcPill(fb) + '</h4>' + fcTable(fb) + '<p class="note">En geride olduğun etken: <b>' + esc(fb.weakest) + '</b>.</p></div>' +
@@ -3716,14 +3844,14 @@ if (typeof module !== 'undefined') module.exports = M;
   function navyBox() {
     if (!s.navy) return '';
     var y = s.year, rows = Object.keys(M.GEN_N).filter(function (g) { return s.navy[g] > 0; }).map(function (g) { var w = M.genW(g, y); return '<tr><td>' + esc(M.GEN_N[g]) + why('bugün tonu %' + Math.round(w * 100) + ' sayılır') + '</td><td class="num">' + fmt(s.navy[g]) + ' bin ton</td><td class="num">' + fmt(s.navy[g] * w) + '</td></tr>'; }).join('');
-    var sr = M.seaCtl(s, 'russia'), sg = M.seaCtl(s, 'liga'), si = M.seaCtl(s, 'italya');
+    var sr = M.seaCtl(s, 'russia'), sgL = M.seaCtl(s, 'liga'), si = M.seaCtl(s, 'italya');
     function sea(n, x, what) { return '<tr><td>' + n + why(what) + '</td><td class="num">' + fmt(x.ours) + ' / ' + fmt(x.theirs) + '</td><td class="edge">' + (x.k >= 1 ? '<span class="up">üstünsün</span>' : '<span class="down">gerisindesin</span>') + '</td></tr>'; }
     var orders = Object.keys(M.NAVY).filter(function (id) { return !(M.NAVY[id].to && y > M.NAVY[id].to) && !(M.NAVY[id].from > M.endOf(s)); }).map(function (id) {
       var N = M.NAVY[id], w = M.A.navyCheck(s, id); return '<article class="card' + (w && !/Hazine|sipariş/.test(w) ? ' locked' : '') + '"><h4>' + esc(N.n) + '</h4><p>' + gloss(N.what) + '</p>' + (w ? '' : prev(function (b) { return M.A.navyOrder(b, id); }, 'Gelince')) + '<div class="meta">' + money(M.navyCost(s, id)) + ' · gelecek yıl gelir · bakım bin tonu yılda 0,08' + (M.homeBuilt(s) ? ' · Tersane-i Amire: dışa bağımlılık yok, yılda iki' : ' · yabancı tersane: bağımlılık +1') + '</div>' + btn('navy', 'Ismarla', { arg: id, disabled: !!w }) + why(w) + '</article>'; }).join('');
     var sw = M.A.scrapCheck(s);
     return '<h3 id="or-navy">Donanma <small>etkili güç ' + fmt(M.navyEff(s)) + ' · ' + fmt(M.navyTons(s)) + ' bin ton</small></h3><p class="note">' + gloss('Her yeni gemi kuşağı eskisini eskitir; bütün donanmalarda aynı kural. Donanma hangi cephenin önemli olduğunu değiştirir: Karadeniz\'de üstünsen Balkan\'a ikmal kolay; Ege\'de üstünsen Anadolu\'nun askeri Rumeli\'ye yetişir ve Girit\'e gönüllü geçemez; Akdeniz\'de güçlüysen Trablus savunulur.') + '</p>' +
-      '<div class="row2"><div><table class="t">' + rows + '</table></div><div><table class="t"><thead><tr><th>Deniz</th><th class="num">Biz / onlar</th><th></th></tr></thead>' + sea('Karadeniz (Rus filosu)', sr, 'Rus donanmasının dörtte biri; 1871\'e kadar Paris Antlaşması onu yasaklar') + sea('Ege (Yunan donanması)', sg, 'Balkan Savaşı\'nda Anadolu\'nun askerini taşır') + (y >= 1890 ? sea('Akdeniz (İtalya\'nın filosu)', si, 'İtalyan donanmasının %60\'ı') : '') + '</table></div></div>' +
-      '<div class="cards">' + orders + '</div><div class="actions">' + btn('scrap', 'Eski gemileri hizmetten çıkar <small>bakımdan tasarruf; eski kuşağın kalan değeri gider</small>' + (sw ? '' : prev(M.A.scrap)), { cls: 'btn ghost', disabled: !!sw }) + '</div>';
+      '<div class="row2"><div><table class="t">' + rows + '</table></div><div><table class="t"><thead><tr><th>Deniz</th><th class="num">Biz / onlar</th><th></th></tr></thead>' + sea('Karadeniz (Rus filosu)', sr, 'Rus donanmasının dörtte biri; 1871\'e kadar Paris Antlaşması onu yasaklar') + sea('Ege (Yunan donanması)', sgL, 'Balkan Savaşı\'nda Anadolu\'nun askerini taşır') + (y >= 1890 ? sea('Akdeniz (İtalya\'nın filosu)', si, 'İtalyan donanmasının %60\'ı') : '') + '</table></div></div>' +
+      '<div class="cards">' + orders + '</div><div class="actions">' + btn('scrap', 'Eski gemileri hizmetten çıkar <small>bakımdan tasarruf; eski kuşağın kalan değeri gider' + (sw ? '' : (function () { var d = M.areaDrops(s, M.A.scrap); return d.length ? ': donanma değerin ' + fmt(d[0].v0) + ' → ' + fmt(d[0].v1) + ', puanın ' + sg(Math.round((d.sc[1] - d.sc[0]) * 10) / 10, 1) : ''; })()) + '</small>' + (sw ? '' : prev(M.A.scrap)), { cls: 'btn ghost', disabled: !!sw }) + '</div>';
   }
   // 4.0: the ranking of the powers
   function gapLine(a, L, g, us) {
@@ -3738,11 +3866,20 @@ if (typeof module !== 'undefined') module.exports = M;
     return '<figure class="spark"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Güç sıralamasında yerin, yıl yıl">' + grid + '<line x1="' + pad + '" x2="' + (W - 10) + '" y1="' + ((Y(8) + Y(9)) / 2) + '" y2="' + ((Y(8) + Y(9)) / 2) + '" class="ln eg"/>' +
       '<path d="' + h.map(function (x, i) { return (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(x.rk).toFixed(1); }).join(' ') + '" class="ln us"/><text x="' + pad + '" y="' + (H - 4) + '" class="gt">' + h[0].y + '</text><text x="' + (W - 10) + '" y="' + (H - 4) + '" class="gt" text-anchor="end">' + h[h.length - 1].y + '</text></svg><figcaption><span class="k us"></span>Güç sıralamasında yerin (yukarısı iyi) <span class="k eg"></span>büyük güç sınırı (ilk sekiz)</figcaption></figure>';
   }
+  // 4.1: how close the neighbours stand: the points to the power just above and just below, and a warning for a tight group
+  function nbLine(T) {
+    var us = T.us, up = null, dn = null; T.rows.forEach(function (r) { if (r.rank === us.rank - 1) up = r; if (r.rank === us.rank + 1) dn = r; });
+    var near = T.rows.filter(function (r) { return r.p !== 'OT' && Math.abs(r.sc - us.sc) <= 3; });
+    var t = (up ? 'Bir üstündeki <b>' + esc(up.n) + '</b> ' + fmt(up.sc - us.sc, 1) + ' puan önde' : 'En üsttesin') + (dn ? '; bir altındaki <b>' + esc(dn.n) + '</b> ' + fmt(us.sc - dn.sc, 1) + ' puan geride.' : '.');
+    if (near.length >= 2) t += ' <span class="warnnote">Sıkışık grup: ' + near.length + ' güç seninle 3 puan içinde (' + near.map(function (r) { return esc(r.n); }).join(', ') + '). Küçük bir değişiklik birkaç sıra oynatır.</span>';
+    return '<p class="note nb">' + t + '</p>';
+  }
   function tabSiralama() {
     var T = M.rankTable(s), us = T.us, h10 = null; s.history.forEach(function (h) { if (h.y === s.year - 11 && h.ranks) h10 = h; });
     var rows = T.rows.map(function (r) {
       var was = h10 ? h10.ranks.match(/../g).indexOf(r.p) + 1 : null, mv = was ? was - r.rank : 0;
-      return '<tr class="' + (r.p === 'OT' ? 'lead' : '') + '"><td class="num">' + r.rank + '.</td><td>' + (r.p === 'OT' ? '<b>' + esc(r.n) + ' (sen)</b>' : esc(r.n)) + (r.rank === 8 ? why('ilk sekiz büyük güçtür') : '') + '</td><td class="num">' + fmt(r.sc, 1) + '</td><td class="num">' + (was ? (mv > 0 ? '<span class="up">▲' + mv + '</span>' : (mv < 0 ? '<span class="down">▼' + (-mv) + '</span>' : '=')) : '') + '</td></tr>';
+      var gap = r.sc - us.sc, near = r.p !== 'OT' && Math.abs(gap) <= 3;
+      return '<tr class="' + (r.p === 'OT' ? 'lead' : (near ? 'near' : '')) + '"><td class="num">' + r.rank + '.</td><td>' + (r.p === 'OT' ? '<b>' + esc(r.n) + ' (sen)</b>' : esc(r.n)) + (r.rank === 8 ? why('ilk sekiz büyük güçtür') : '') + '</td><td class="num">' + fmt(r.sc, 1) + '</td><td class="num">' + (r.p === 'OT' ? '–' : sg(Math.round(gap * 10) / 10, 1)) + '</td><td class="num">' + (was ? (mv > 0 ? '<span class="up">▲' + mv + '</span>' : (mv < 0 ? '<span class="down">▼' + (-mv) + '</span>' : '=')) : '') + '</td></tr>';
     }).join('');
     var ar = M.AREAS.map(function (a) { var L = M.areaLeader(s, a[0], T), g = a[0] === 'prest' ? null : M.gapYears(s, a[0], L.p); return '<tr><td>' + a[1] + ' <small>(ağırlık %' + Math.round(a[2] * 100) + ')</small></td><td class="num">' + fmt(us.v[a[0]], a[0] === 'army' || a[0] === 'navy' ? 0 : 1) + '</td><td class="num">' + T.ar[a[0]] + '.</td><td>' + gapLine(a, L, g, us) + '</td></tr>'; }).join('');
     var R = M.ruWhy(s), wl = R.watch.map(function (w) { return '<li>' + esc(w.n) + ': −%' + Math.round(w.v * 100) + '</li>'; }).join('');
@@ -3750,7 +3887,8 @@ if (typeof module !== 'undefined') module.exports = M;
       '<p class="note">' + gloss('Ne durdurur: gücünü Rusya\'nın %' + Math.round(R.comfort * 100) + '\'ünün altında tutarsan yarış her yıl yavaşlar; Almanya\'ya yaslanmak Rus ordusunun beşte birini Alman sınırına bağlar; Lahey konferansı yarışı yarıya indirir; Kafkas Müslümanlarına destek bir kısmını orada tutar. Yükseldikçe öteki büyük güçler de karşı kefeye ağırlık koyar (koalisyon ' + Math.round((s.coal || 0) * 100) + '/100).') + '</p></div>' : '';
     var fates = s.split ? '<p class="note">Bu oyunda dünyanın gidişi: ' + M.POWERS.filter(function (p) { return p !== 'OT'; }).map(function (p) { var f = M.rivalFate(s, p); return esc(M.powName(p, s.year)) + (f >= 1.08 ? ' hızlı' : (f <= 0.92 ? ' durgun' : ' olağan')); }).join(', ') + '. Rakipler kendi tarihsel yollarında büyür; yerinde saymak geri düşmektir.</p>' : '<p class="note">Rakipler kendi tarihsel yollarında büyür; yerinde saymak geri düşmektir. 1861\'den sonra her oyunda dünyanın gidişi biraz farklıdır.</p>';
     return '<section class="pane"><h2>Güç sıralaması · ' + s.year + '</h2><p class="lead">' + gloss('On büyük devlet her yıl altı alanda ölçülür. Her alanda liderin değerine oranın karekökü alınır (geride olduğun alanda yetişmek daha çok kazandırır) ve ağırlıklarla toplanır. İlk sekiz büyük güçtür: kongre toplar, Balkan uzlaşmasına öncülük eder, hükümranlık kurar.') + ' Sen <b>' + us.rank + '.</b> sıradasın, puanın <b>' + fmt(us.sc, 1) + '</b>.</p>' +
-      '<div class="row2"><div><table class="t"><thead><tr><th class="num">Sıra</th><th>Devlet</th><th class="num">Puan</th><th class="num">' + (h10 ? h10.y : '') + '\'den</th></tr></thead>' + rows + '</table></div><div><table class="t"><thead><tr><th>Alan</th><th class="num">Sende</th><th class="num">Sıran</th><th>Fark</th></tr></thead>' + ar + '</table>' + fates + '</div></div>' + rankSpark() + ruBox +
+      nbLine(T) + (s.split ? rkBox(rkNotes(s.year - 2, s.year - 1).map(function (n) { return n[1]; }), (s.year - 1) + ' yılında sıralama') : '') +
+      '<div class="row2"><div><table class="t"><thead><tr><th class="num">Sıra</th><th>Devlet</th><th class="num">Puan</th><th class="num">Farkın</th><th class="num">' + (h10 ? h10.y + M.sfx(h10.y, 'den') : '') + '</th></tr></thead>' + rows + '</table>' + (function () { var L = s.split ? rkNotes(s.year - 11, s.year - 2) : []; return L.length ? '<details class="donelist"><summary>Son on yılda sıralama neden oynadı (' + L.length + ')</summary><ul class="rep">' + L.slice().reverse().map(function (n) { return '<li><b>' + n[0] + '</b> ' + gloss(n[1]) + '</li>'; }).join('') + '</ul></details>' : ''; })() + '</div><div><table class="t"><thead><tr><th>Alan</th><th class="num">Sende</th><th class="num">Sıran</th><th>Fark</th></tr></thead>' + ar + '</table>' + fates + '</div></div>' + rankSpark() + ruBox +
       '<p class="note">Kaynaklar: sanayi ve ekonomi Bairoch, ordu ve donanma Kennedy (Büyük Güçlerin Yükselişi ve Çöküşü), okullaşma ve prestij kaba tahmin. Rakam kaba, yön doğru.</p></section>';
   }
   function callupBox() {
@@ -3801,6 +3939,14 @@ if (typeof module !== 'undefined') module.exports = M;
     if (id === 'bagimlilik') { var db = M.dependenceBreak(s); title = 'Bağımlılık ' + db.total + ': neden?'; body = db.lines.length ? table(db.lines) : '<p>Henüz yabancı bir güce bağlı değilsin.</p>'; body += '<p class="note">' + gloss(GLOSS.bagimlilik[1]) + '</p>'; }
     return modal(title, body, btn('closewhy', 'Kapat', { cls: 'btn primary' }), 'sheet');
   }
+  // 4.1: before an action that lowers an area value at once
+  function askModal() {
+    var q = ui.ask, d = q.drops, sc = d.sc || [0, 0];
+    var rows = d.map(function (x) { var dec = x.k === 'army' || x.k === 'navy' ? 0 : 1; return '<tr><td>' + esc(x.n) + '</td><td class="num">' + fmt(x.v0, dec) + ' → <b>' + fmt(x.v1, dec) + '</b></td><td class="num down">' + sg(Math.round((x.v1 - x.v0) * (dec ? 10 : 1)) / (dec ? 10 : 1), dec) + '</td></tr>'; }).join('');
+    var what = q.a === 'scrap' ? 'Eski gemileri hizmetten çıkarmak bakımdan tasarruf ettirir, ama kalan değerleri hemen gider.' : (q.a === 'lower' ? 'Kurumu düşürmek bakımından tasarruf ettirir, ama etkisi hemen azalır.' : 'Bu karar bir alanı hemen düşürür.');
+    return modal('Emin misin?', '<p class="lead">' + esc(what) + '</p><table class="t">' + rows + '<tr class="sum"><td>Güç sıralaması puanın</td><td class="num">' + fmt(sc[0], 1) + ' → <b>' + fmt(sc[1], 1) + '</b></td><td class="num down">' + sg(Math.round((sc[1] - sc[0]) * 10) / 10, 1) + '</td></tr>' + (d.net && Math.abs(d.net[1] - d.net[0]) >= 0.1 ? '<tr><td>Yıllık net gelir</td><td class="num">' + fmt(d.net[0], 1) + ' → <b>' + fmt(d.net[1], 1) + '</b></td><td class="num ' + (d.net[1] > d.net[0] ? 'up' : 'down') + '">' + sg(Math.round((d.net[1] - d.net[0]) * 10) / 10, 1) + '</td></tr>' : '') + '</table><p class="note">Sıralama yıl sonunda yeniden ölçülür; rakipler de büyür.</p>',
+      btn('askno', 'Vazgeç', { cls: 'btn' }) + btn('askyes', 'Evet, uygula', { cls: 'btn primary' }), 'ask');
+  }
   function termModal() { var g = GLOSS[ui.term]; if (!g) return ''; return modal(g[0], '<p class="etext">' + esc(g[1]) + '</p>', btn('closeterm', 'Tamam', { cls: 'btn primary' }), 'paper term-modal'); }
   function modal(title, body, foot, cls) { return '<div class="scrim"><div class="modal ' + (cls || '') + '" role="dialog" aria-modal="true" aria-label="' + esc(title) + '"><h2>' + esc(title) + '</h2><div class="mbody">' + body + '</div><div class="mfoot">' + foot + '</div></div></div>'; }
 
@@ -3826,9 +3972,13 @@ if (typeof module !== 'undefined') module.exports = M;
     function line(label, a, b) { var p0 = r(prv, a, b), p1 = r(now, a, b), p00 = r(first, a, b), d = p1 - p0; return '<div class="prog"><span>' + label + '</span><b class="' + (d > 0 ? 'up' : (d < 0 ? 'down' : '')) + '">%' + p0 + ' → %' + p1 + '</b><small>1816\'da %' + p00 + '</small></div>'; }
     return '<div class="progress">' + line('Balkan gücün, Rusya\'ya göre', 'pb', 'pr') + line('Suriye gücün, Mısır\'a göre', 'ps', 'pe') + '</div>';
   }
+  // 4.1: the ranking explains itself: the year's lines in a box of their own
+  function rkBox(lines, head) { return lines.length ? '<div class="rkwhy"><b>' + esc(head) + '</b><ul class="rep">' + lines.map(function (t) { return '<li>' + gloss(t) + '</li>'; }).join('') + '</ul></div>' : ''; }
+  function rkNotes(y0, y1) { return (s.rkNotes || []).filter(function (n) { return n[0] > y0 && n[0] <= y1; }); }
   function reportModal() {
     var R = ui.report;
-    var body = progressBox() + '<ul class="rep">' + R.lines.map(function (l) { return '<li class="' + l.k + '">' + gloss(l.t) + '</li>'; }).join('') + '</ul>';
+    var rk = R.lines.filter(function (l) { return l.k === 'rank'; }), rest = R.lines.filter(function (l) { return l.k !== 'rank'; });
+    var body = rkBox(rk.map(function (l) { return l.t; }), 'Sıralamada bu yıl') + progressBox() + '<ul class="rep">' + rest.map(function (l) { return '<li class="' + l.k + '">' + gloss(l.t) + '</li>'; }).join('') + '</ul>';
     return modal(R.year + ' yılının hesabı', body, btn('next', ui.decade ? 'On yıl raporuna geç' : (s.over ? 'Sonuca geç' : (s.pause ? 'Tarihin ilk hükmüne geç' : s.year + ' yılına geç')), { cls: 'btn primary' }), 'report');
   }
   function decadeModal() {
@@ -3837,7 +3987,10 @@ if (typeof module !== 'undefined') module.exports = M;
     function row(n, a, b, d) { return '<tr><td>' + n + '</td><td class="num">' + a + '</td><td class="num">' + b + '</td>' + (d != null ? '<td class="num">' + d + '</td>' : '<td></td>') + '</tr>'; }
     var G = M.goals(s);
     if (s.era >= 3) { for (var j = 0; j < h.length; j++) if (h[j].y === yNow - 10) { first = h[j]; break; } }
-    var body = '<p class="lead">On yıl raporu: ' + first.y + '\'den bugüne. Rakipler de her yıl yatırım yaptı.</p>' + decadeRank(first, now) + '<table class="t"><thead><tr><th></th><th class="num">' + first.y + '</th><th class="num">' + yNow + '</th><th class="num">Rakip</th></tr></thead>' +
+    var dn = s.split ? rkNotes(first.y, yNow).filter(function (n) { return /^Güç sıralamasında/.test(n[1]); }) : [];
+    var body = '<p class="lead">On yıl raporu: ' + first.y + '\'den bugüne. Rakipler de her yıl yatırım yaptı.</p>' + decadeRank(first, now) +
+      (!dn.length && s.split ? rkBox(rkNotes(yNow - 1, yNow).map(function (n) { return n[1]; }), 'Sıralamada bu yıl') : '') +
+      (dn.length ? '<details class="donelist" open><summary>Sıran neden değişti (' + dn.length + ')</summary><ul class="rep">' + dn.map(function (n) { return '<li><b>' + n[0] + '</b> ' + gloss(n[1]) + '</li>'; }).join('') + '</ul></details>' : '') + '<table class="t"><thead><tr><th></th><th class="num">' + first.y + '</th><th class="num">' + yNow + '</th><th class="num">Rakip</th></tr></thead>' +
       row('Balkan gücü (Rusya)', fmt(first.pb), fmt(now.pb), fmt(now.pr)) + (s.egypt.settled ? '' : row('Suriye gücü (Mısır)', fmt(first.ps), fmt(now.ps), fmt(now.pe))) + row('Elindeki eyalet grubu', first.land == null ? '–' : first.land, now.land, null) +
       row('Bilinen teknoloji', first.techs, now.techs, null) + row('Ortalama teknoloji gecikmesi', fmt(first.gap, 1) + ' yıl', fmt(now.gap, 1) + ' yıl', null) +
       row('Yıllık gelir (milyon kuruş)', fmt(first.income), fmt(now.income), null) + row('Borç (milyon kuruş)', fmt(first.debt), fmt(now.debt), null) + row('İstikrar', first.stab, now.stab, null) + row('Bağımlılık', first.dep, now.dep, null) + '</table>' + '<h3>Hedefler · ' + M.endOf(s) + '</h3><div class="areas">' + G.map(function (g) { return '<div class="area"><span>' + (g.done ? '✓ ' : '') + esc(g.n) + '</span>' + bar(g.v, 1) + '<b>' + Math.round(g.v * 100) + '</b></div>'; }).join('') + '</div>' + spark() +
@@ -4024,7 +4177,7 @@ if (typeof module !== 'undefined') module.exports = M;
   }
   function codeModal() {
     var body = (s ? '<p>Bu kodu kopyalayıp kendine gönder (örneğin WhatsApp ile); öteki cihazda oyunu açıp "Kayıt kodum var" bölümüne yapıştır. Kod, şu ana kadar verdiğin bütün kararları taşır.</p><textarea id="codeout" class="code" readonly>' + esc(saveCode()) + '</textarea><div class="actions">' + btn('copy', 'Kodu kopyala', { arg: 'codeout', cls: 'btn primary' }) + '</div><h3>Kod yükle</h3>' : '') +
-      '<p>' + (s ? 'Başka bir cihazdan aldığın kodu buraya yapıştır. Buradaki oyunun yerini alır.' : 'Başka bir cihazdan aldığın kayıt kodunu buraya yapıştır.') + ' 3.0, 3.1 ve 3.2 sürümlerinin kodu da olur: 4.0 kurallarıyla yeniden kurulur.' + '</p><textarea id="codein" class="code" placeholder="P1815K4...." autocomplete="off" autocapitalize="off" spellcheck="false">' + esc(ui.codeIn || '') + '</textarea>' +
+      '<p>' + (s ? 'Başka bir cihazdan aldığın kodu buraya yapıştır. Buradaki oyunun yerini alır.' : 'Başka bir cihazdan aldığın kayıt kodunu buraya yapıştır.') + ' 3.0, 3.1, 3.2 ve 4.0 sürümlerinin kodu da olur: 4.1 kurallarıyla yeniden kurulur.' + '</p><textarea id="codein" class="code" placeholder="P1815K4...." autocomplete="off" autocapitalize="off" spellcheck="false">' + esc(ui.codeIn || '') + '</textarea>' +
       (ui.codeErr ? '<p class="note bad">' + esc(ui.codeErr) + '</p>' : '') + '<div class="actions">' + btn('importgo', 'Kodu yükle ve devam et', { cls: 'btn' }) + '</div>';
     return modal('Kayıt kodu', body, btn('close', 'Kapat', { cls: 'btn primary' }), 'paper');
   }
@@ -4080,14 +4233,14 @@ if (typeof module !== 'undefined') module.exports = M;
     var where = g ? (g.pause ? ([1840, 1860, 1880][(g.era || 1) - 1] || 1840) + ' · hüküm' : g.year) + ' · ' + M.DIFF[g.diff].n + (old ? ' · ' + oldVer(sv) + ' kaydı' : '') : '';
     return '<main class="intro"><div class="paper-sheet"><p class="place">İstanbul, 1816</p><h1>Proje 1815</h1><p class="tag">Kâğıt döngü · sürüm ' + M.VERSION + '</p>' +
       '<p>' + gloss('Osmanlı Devleti\'nin başındasın. Hazine boş, ordu Yeniçerilerin elinde, komşular güçleniyor. Her yıl birkaç karar verirsin; 1840, 1860 ve 1880\'de tarih hükmünü verir, istersen 1 Ocak 1914\'e kadar sürdürürsün.') + '</p>' +
-      (ui.oldFail ? '<p class="note bad">Eski sürüm kaydın 4.0 kurallarıyla kurulamadı ve silindi. Yeni bir oyun başlatabilirsin.</p>' : '') +
-      (canResume ? '<div class="actions">' + btn('resume', 'Devam et <small>' + where + '</small>', { cls: 'btn primary big' }) + '</div>' + (old ? '<p class="note">Bu kayıt ' + oldVer(sv) + ' sürümünden. Devam edersen kararların 4.0 kurallarıyla baştan uygulanır (1860\'a kadar kurallar aynı); oyun 1914\'e kadar sürebilir.</p>' : '') + '<h2>Yeni oyun</h2>' : (g && g.over ? '<div class="actions">' + btn('resume', 'Son oyunun sonucunu aç', { cls: 'btn' }) + '</div>' : '')) +
+      (ui.oldFail ? '<p class="note bad">Eski sürüm kaydın 4.1 kurallarıyla kurulamadı ve silindi. Yeni bir oyun başlatabilirsin.</p>' : '') +
+      (canResume ? '<div class="actions">' + btn('resume', 'Devam et <small>' + where + '</small>', { cls: 'btn primary big' }) + '</div>' + (old ? '<p class="note">Bu kayıt ' + oldVer(sv) + ' sürümünden. Devam edersen kararların 4.1 kurallarıyla baştan uygulanır (' + (sv.s.v === 40 ? 1880 : 1860) + M.sfx(sv.s.v === 40 ? 1880 : 1860, 'e') + ' kadar kurallar aynı); oyun 1914\'e kadar sürebilir.</p>' : '') + '<h2>Yeni oyun</h2>' : (g && g.over ? '<div class="actions">' + btn('resume', 'Son oyunun sonucunu aç', { cls: 'btn' }) + '</div>' : '')) +
       startPicker() + '<h3>Zorluk</h3>' + diffPicker() +
       '<div class="actions">' + btn('new', 'Yeni oyun', { arg: canResume ? 'ask' : 'yes', cls: 'btn big' + (canResume ? '' : ' primary') }) + btn('modal', 'Kayıt kodum var', { arg: 'code', cls: 'btn ghost' }) + '</div>' +
       (ui.askNew ? '<p class="note bad">Kayıtlı oyunun silinir. Emin misin? ' + btn('new', 'Evet, yeni oyun başlat', { arg: 'yes', cls: 'btn' }) + '</p>' : '') +
       '<p class="note rec">Oyunun kaydı (kararların, süren, anketin) sonunda Tolga\'ya gönderilir' + (ENDPOINT ? ', her on yılda kendiliğinden de' : '') + '; başka kişisel bilgi alınmaz.</p>' +
       '<p class="note">Telefonda oynamak için yapıldı; 1840\'a kadar 20–30 dakika sürer. Oyun kendiliğinden kaydedilir.</p>' +
-      '<p class="note"><b>4.0\'da yeni:</b> oyun 1914\'e kadar sürüyor (1861–1880 ve 1881–1913); her yıl on büyük devletin altı alanda güç sıralaması; donanma, bloklar, anayasa, demiryolları, Balkan Savaşları; güçlü bir devletin kullanabileceği hamleler; 1841, 1861 ve 1881\'den hazır başlangıçlar.</p></div></main>';
+      '<p class="note"><b>4.1\'de yeni:</b> sıralama kendini açıklar (yıl sonunda kim seni geçti, hangi alanda, neden; üstündeki ve altındaki güce kaç puan); 1881\'den ikinci sanayi dalgası: çelik ve elektrik sanayii, anonim şirketler, topçu alayları, deniz üsleri; büyüme duvarı kalktı.</p><p class="note"><b>4.0\'da yeni:</b> oyun 1914\'e kadar sürüyor (1861–1880 ve 1881–1913); her yıl on büyük devletin altı alanda güç sıralaması; donanma, bloklar, anayasa, demiryolları, Balkan Savaşları; güçlü bir devletin kullanabileceği hamleler; 1841, 1861 ve 1881\'den hazır başlangıçlar.</p></div></main>';
   }
   function verdictSheet(v, G) {
     return '<div class="areas">' + G.map(function (g) { return '<div class="area"><span>' + (g.done ? '✓ ' : '') + esc(g.n) + '</span>' + bar(g.v, 1) + '<b>' + Math.round(g.v * 100) + '</b>' + why(g.why) + '</div>'; }).join('') + '</div>' +
@@ -4154,7 +4307,7 @@ if (typeof module !== 'undefined') module.exports = M;
     var d = load(); if (!d) { clearSave(); flash('Kayıt bulunamadı.'); return; }
     var note = null;
     if (isOld(d)) { // an older save: its commands replayed under the 3.2 rules
-      var yrs = d.rec.yrs || {}, b = rebuild(d.rec.seed, d.rec.diff, d.rec.log, oldVer(d), d.s.evlog, d.rec);
+      var yrs = d.rec.yrs || {}, b = rebuild(d.rec.seed, d.rec.diff, d.rec.log, oldVer(d), d.s.evlog, d.rec, d.rec.st || d.s.start); // 4.1: a 4.0 save keeps its start year
       if (b.err) { clearSave(); s = null; rec = null; ui.oldFail = true; ui.view = 'intro'; return; }
       Object.keys(yrs).forEach(function (y) { if (+y <= s.year && yrs[y] && yrs[y].t) yrRec(y).t = yrs[y].t; });
       note = oldNote(b.info, oldVer(d)); d.tab = 'harita';
@@ -4183,9 +4336,14 @@ if (typeof module !== 'undefined') module.exports = M;
     touch();
     if (a !== 'sug' && a !== 'term' && a !== 'closeterm') ui.hl = null;
     if (a in CMD) {
-      r = doCmd(CMD[a] ? a + ':' + arg : a);
+      var tok = CMD[a] ? a + ':' + arg : a;
+      if (s.split && !ui.askOk) { var drops = M.areaDrops(s, function (b) { return M.apply(b, tok); }); if (drops.length) { ui.ask = { a: a, arg: arg, tok: tok, drops: drops }; render(); return; } } // 4.1: an action that lowers an area value at once asks first, with the numbers
+      ui.askOk = false;
+      r = doCmd(tok);
       if (r && r.result) ui.result = r.result;
     } else switch (a) {
+      case 'askyes': var q = ui.ask; ui.ask = null; if (q) { ui.askOk = true; act(q.a, q.arg); } return;
+      case 'askno': ui.ask = null; break;
       case 'term': ui.term = arg; break;
       case 'closeterm': ui.term = null; break;
       case 'why': ui.why = arg; break;
@@ -4242,7 +4400,8 @@ if (typeof module !== 'undefined') module.exports = M;
     else if (s && ui.modal === 'ocak') html += ocakModal();
     else if (s && ui.modal === 'share') html += shareModal();
     else if (s && ui.modal === 'newgame') html += newGameModal();
-    else if (s && ui.modal === 'note') html += modal('Eski kayıt 4.0\'da', '<p class="etext" id="oldnote">' + esc(ui.note || '') + '</p><p class="note">Kurallar değişti: bazı kararların sonucu farklı çıkmış, bazıları artık geçmiyor olabilir. Yeni olanlar için menüden brifingi açabilirsin.</p>', btn('close', 'Devam', { cls: 'btn primary' }), 'paper');
+    else if (s && ui.modal === 'note') html += modal('Eski kayıt ' + M.VERSION + '\'de', '<p class="etext" id="oldnote">' + esc(ui.note || '') + '</p><p class="note">Kurallar değişti: bazı kararların sonucu farklı çıkmış, bazıları artık geçmiyor olabilir. Yeni olanlar için menüden brifingi açabilirsin.</p>', btn('close', 'Devam', { cls: 'btn primary' }), 'paper');
+    if (s && ui.ask) html += askModal();
     if (ui.term) html += termModal();
     var codeEl = document.getElementById('codein'); if (codeEl && ui.modal === 'code') ui.codeIn = codeEl.value;
     app.innerHTML = html;
