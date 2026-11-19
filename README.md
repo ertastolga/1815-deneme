@@ -69,7 +69,7 @@ an independent review before each step closes, automated tests). No image-genera
 kullanıyorsun. Her sonuç nedenini gösteriyor.
 
 - **[Tarayıcı prototipini oyna](https://ertastolga.github.io/1815-deneme/)**
-- Oyun Steam'de satışa hazırlandığı için kaynak kodu gizli bir depoda. İş başvurusu için istenirse erişim verebilirim.
+- Oyun Steam'de satışa hazırlandığı için kaynak kodu gizli bir depoda.
 - Rolüm: ürün sahibi ve tasarımcı. Oyunun tasarımını ve bütün ürün kararlarını ben veriyorum, her sürümü test ediyorum,
   arkadaşlarımla oyun testi anketi yaptım, pazar ve fiyat araştırması yaptım.
 - Teknik: Godot 4.7.2 (GDScript), yaklaşık 117.000 satır kod, 174 test betiği, GitHub Actions ile otomatik test,
