@@ -32,7 +32,7 @@ I started the project on 12 October 2026 and run it as the product owner and des
 
 ## Technical overview
 
-| | |
+| Area | Details |
 |---|---|
 | Engine and language | Godot 4.7.2, GDScript; Python for offline tools |
 | Size (Nov 2026) | ~117,000 lines of GDScript in 320 files (game UI ~29k, simulation ~33k, tests ~56k) |
